@@ -1,0 +1,65 @@
+# Card-payment policy. A rule and the model both vote.
+# The harsher vote wins: BLOCK beats CHALLENGE beats ALLOW.
+# "when" lists conditions that must all be true.
+#
+# Velocity matches the burst pattern (several tickets inside an hour).
+# Foreign + new device, a ticket more than 5 times the customer's own
+# 30-day average, and a large night ticket are the other three patterns
+# the generator plants. Stealth fraud is left to the model on purpose.
+
+version: fraud_v1
+effective_date: "2026-10-01"
+owner: fraud-policy
+description: >
+  Blocks clear rule hits and high model scores, challenges the middle,
+  and allows the rest. A missing amount is challenged, never silently allowed.
+kind: fraud
+model_version: fraud_hgb_v1
+
+data_checks:
+  - field: amount
+    decision: CHALLENGE
+    reason: MISSING_AMOUNT
+  - field: txn_ts
+    decision: CHALLENGE
+    reason: MISSING_TXN_TS
+
+rules:
+  - reason: VELOCITY_1H
+    decision: BLOCK
+    when:
+      - field: txn_count_1h
+        op: gte
+        value: 3
+  - reason: FOREIGN_NEW_DEVICE
+    decision: BLOCK
+    when:
+      - field: is_foreign_country
+        op: eq
+        value: 1
+      - field: is_new_device
+        op: eq
+        value: 1
+  - reason: AMOUNT_VS_AVG_ABOVE_5
+    decision: CHALLENGE
+    when:
+      - field: amount_vs_avg_30d
+        op: gt
+        value: 5
+  - reason: NIGHT_HIGH_VALUE
+    decision: CHALLENGE
+    when:
+      - field: is_night
+        op: eq
+        value: 1
+      - field: amount
+        op: gte
+        value: 20000
+
+# Model probability of fraud, chosen from the test threshold table.
+# 0.35 alerts about 3.6% of transactions and catches about 85% of fraud.
+# 0.80 alerts about 1.1%, with higher precision, and still catches about 82%.
+# Scores in between are challenged. Scores at or above 0.80 are blocked.
+score_bands:
+  challenge_min_pd: 0.35
+  block_min_pd: 0.80

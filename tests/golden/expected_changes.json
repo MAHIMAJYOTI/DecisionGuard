@@ -1,0 +1,71 @@
+{
+  "note": "Every decision or reason-code difference between champion and challenger must be listed here. A strategy change that is not listed fails the golden test. A listed change that no longer happens also fails.",
+  "changes": [
+    {
+      "case_id": "credit_bureau_599",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "Bureau decline cutoff moves from 600 to 580, so 599 is approved when the model PD is inside the approve band."
+    },
+    {
+      "case_id": "credit_bureau_580",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "580 is below the v1 cutoff and exactly on the v2 cutoff, so v2 does not decline it."
+    },
+    {
+      "case_id": "credit_bureau_579",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "Both versions decline, but the reason code follows the cutoff that fired."
+    },
+    {
+      "case_id": "credit_dti_051",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "DTI decline cutoff moves from 50% to 55%."
+    },
+    {
+      "case_id": "credit_dti_055",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "DTI of exactly 55% is above 50% and not above 55%."
+    },
+    {
+      "case_id": "credit_dti_056",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "Both versions decline a DTI of 56%, with the reason code of the cutoff that fired."
+    },
+    {
+      "case_id": "credit_thin_pd_004",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "Thin-file approve cutoff tightens from 0.05 to 0.03, so PD 0.04 moves from approve to refer."
+    },
+    {
+      "case_id": "credit_thin_pd_009",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "Thin-file refer cutoff tightens from 0.10 to 0.07, so PD 0.09 moves from refer to decline."
+    },
+    {
+      "case_id": "credit_stacked_rules",
+      "from_strategy": "credit_v1",
+      "to_strategy": "credit_v2",
+      "reason": "The stacked decline stays a decline. The DTI reason code changes with the cutoff."
+    },
+    {
+      "case_id": "fraud_velocity_3",
+      "from_strategy": "fraud_v1",
+      "to_strategy": "fraud_v2",
+      "reason": "A 1-hour velocity burst is CHALLENGE in v2 and BLOCK in v1 when the model itself would allow."
+    },
+    {
+      "case_id": "fraud_model_pd_036",
+      "from_strategy": "fraud_v1",
+      "to_strategy": "fraud_v2",
+      "reason": "Model challenge cutoff moves from 0.35 to 0.40, so PD 0.36 is allowed by v2."
+    }
+  ]
+}

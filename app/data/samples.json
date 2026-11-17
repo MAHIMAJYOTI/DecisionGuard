@@ -1,0 +1,11 @@
+{
+  "credit_rows": 5000,
+  "credit_by_outcome": {
+    "not_booked": 1718,
+    "good": 1640,
+    "not_yet_known": 1457,
+    "bad": 185
+  },
+  "fraud_rows": 20000,
+  "fraud_rows_in_sample": 100
+}

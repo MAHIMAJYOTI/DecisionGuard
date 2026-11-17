@@ -1,0 +1,187 @@
+{
+  "tables": [
+    {
+      "table_name": "credit_bureau",
+      "raw_rows": 50000,
+      "staging_rows": 49336,
+      "rejected_rows": 664
+    },
+    {
+      "table_name": "customers",
+      "raw_rows": 50080,
+      "staging_rows": 48436,
+      "rejected_rows": 1644
+    },
+    {
+      "table_name": "loan_applications",
+      "raw_rows": 50040,
+      "staging_rows": 49366,
+      "rejected_rows": 674
+    },
+    {
+      "table_name": "loan_performance",
+      "raw_rows": 32874,
+      "staging_rows": 32805,
+      "rejected_rows": 69
+    },
+    {
+      "table_name": "transactions",
+      "raw_rows": 500120,
+      "staging_rows": 498461,
+      "rejected_rows": 1659
+    }
+  ],
+  "reasons": [
+    {
+      "table_name": "credit_bureau",
+      "reject_reason": "null_bureau_score",
+      "rejected_rows": 500
+    },
+    {
+      "table_name": "credit_bureau",
+      "reject_reason": "broken_utilisation",
+      "rejected_rows": 65
+    },
+    {
+      "table_name": "credit_bureau",
+      "reject_reason": "bureau_score_out_of_range",
+      "rejected_rows": 60
+    },
+    {
+      "table_name": "credit_bureau",
+      "reject_reason": "missing_customer",
+      "rejected_rows": 40
+    },
+    {
+      "table_name": "credit_bureau",
+      "reject_reason": "duplicate_customer_id",
+      "rejected_rows": 40
+    },
+    {
+      "table_name": "customers",
+      "reject_reason": "null_income",
+      "rejected_rows": 750
+    },
+    {
+      "table_name": "customers",
+      "reject_reason": "null_city",
+      "rejected_rows": 500
+    },
+    {
+      "table_name": "customers",
+      "reject_reason": "null_employment_type",
+      "rejected_rows": 250
+    },
+    {
+      "table_name": "customers",
+      "reject_reason": "duplicate_customer_id",
+      "rejected_rows": 80
+    },
+    {
+      "table_name": "customers",
+      "reject_reason": "impossible_age",
+      "rejected_rows": 40
+    },
+    {
+      "table_name": "customers",
+      "reject_reason": "negative_existing_debt",
+      "rejected_rows": 40
+    },
+    {
+      "table_name": "loan_applications",
+      "reject_reason": "null_requested_amount",
+      "rejected_rows": 400
+    },
+    {
+      "table_name": "loan_applications",
+      "reject_reason": "bad_application_ts",
+      "rejected_rows": 70
+    },
+    {
+      "table_name": "loan_applications",
+      "reject_reason": "negative_requested_amount",
+      "rejected_rows": 60
+    },
+    {
+      "table_name": "loan_applications",
+      "reject_reason": "bad_product",
+      "rejected_rows": 50
+    },
+    {
+      "table_name": "loan_applications",
+      "reject_reason": "duplicate_application_id",
+      "rejected_rows": 40
+    },
+    {
+      "table_name": "loan_applications",
+      "reject_reason": "bad_channel",
+      "rejected_rows": 30
+    },
+    {
+      "table_name": "loan_applications",
+      "reject_reason": "orphan_customer_id",
+      "rejected_rows": 25
+    },
+    {
+      "table_name": "loan_performance",
+      "reject_reason": "bad_disbursement_ts",
+      "rejected_rows": 20
+    },
+    {
+      "table_name": "loan_performance",
+      "reject_reason": "duplicate_application_id",
+      "rejected_rows": 20
+    },
+    {
+      "table_name": "loan_performance",
+      "reject_reason": "negative_disbursed_amount",
+      "rejected_rows": 15
+    },
+    {
+      "table_name": "loan_performance",
+      "reject_reason": "orphan_application_id",
+      "rejected_rows": 15
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "null_amount",
+      "rejected_rows": 1000
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "negative_amount",
+      "rejected_rows": 250
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "duplicate_txn_id",
+      "rejected_rows": 120
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "bad_txn_ts",
+      "rejected_rows": 100
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "null_is_fraud",
+      "rejected_rows": 80
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "bad_merchant_category",
+      "rejected_rows": 40
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "blank_country",
+      "rejected_rows": 40
+    },
+    {
+      "table_name": "transactions",
+      "reject_reason": "orphan_customer_id",
+      "rejected_rows": 30
+    }
+  ],
+  "rejected_meaning": "rejected_rows counts distinct raw rows. A row with two defects is one rejected row and two reason rows."
+}

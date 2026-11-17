@@ -1,0 +1,13 @@
+{
+  "customers": 48436,
+  "applications": 49366,
+  "booked": 32401,
+  "good_loans": 16195,
+  "bad_loans": 1823,
+  "not_yet_known": 14383,
+  "not_booked": 16965,
+  "disbursed_amount": 5837376391,
+  "transactions": 498461,
+  "frauds": 2492,
+  "fraud_rate": 0.004999388116622965
+}

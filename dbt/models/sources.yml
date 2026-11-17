@@ -1,0 +1,141 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: >
+      Files landed by src/warehouse/load.py. Every business column is VARCHAR
+      on purpose, so a bad date or a bad number cannot fail the load.
+      BigQuery would use STRING the same way.
+    tables:
+      - name: customers
+        description: One raw person per row, including injected defects and duplicate ids.
+        columns:
+          - name: customer_id
+            description: Person identifier. CUST0000000 is never a real customer.
+          - name: age
+            description: Age in years, stored as text until staging casts it.
+          - name: income
+            description: Annual income in Indian rupees, stored as text.
+          - name: employment_type
+            description: Employment as sent by the source. Blank is a defect.
+          - name: city
+            description: City name. Blank is a defect.
+          - name: existing_debt
+            description: Outstanding debt in Indian rupees, stored as text.
+          - name: months_at_address
+            description: How long the customer has lived at the current address.
+          - name: _src_row
+            description: Position of the row in the CSV. Used to keep the first copy of a duplicated id.
+          - name: _loaded_at
+            description: Timestamp when this load wrote the row.
+          - name: _source_file
+            description: CSV file name the row was read from.
+
+      - name: credit_bureau
+        description: One bureau snapshot per customer, with defects. Some customers are missing entirely.
+        columns:
+          - name: customer_id
+            description: Person identifier. Must match customers.customer_id when the row is valid.
+          - name: bureau_score
+            description: Score from 300 to 900, stored as text. Blank and out-of-range values are defects.
+          - name: num_enquiries_6m
+            description: Credit enquiries in the last 6 months, stored as text.
+          - name: num_delinquencies_24m
+            description: Delinquencies in the last 24 months, stored as text.
+          - name: total_credit_limit
+            description: Total existing credit limit in Indian rupees, stored as text.
+          - name: utilisation
+            description: Balance divided by limit. Slightly above 1 is allowed. Negative or 4.5 is a defect.
+          - name: _src_row
+            description: Position of the row in the CSV.
+          - name: _loaded_at
+            description: Timestamp when this load wrote the row.
+          - name: _source_file
+            description: CSV file name the row was read from.
+
+      - name: loan_applications
+        description: One application per row, including defects and duplicate application ids.
+        columns:
+          - name: application_id
+            description: Application identifier.
+          - name: customer_id
+            description: Person who applied. CUST0000000 does not exist.
+          - name: product
+            description: "Must be exactly 'personal loan' or 'credit card'. Other spellings are defects."
+          - name: requested_amount
+            description: Requested loan amount or card limit, in Indian rupees, stored as text.
+          - name: tenure_months
+            description: Loan term in months. 0 means a revolving credit card.
+          - name: application_ts
+            description: When the application arrived, stored as text.
+          - name: channel
+            description: branch, web, or app.
+          - name: _src_row
+            description: Position of the row in the CSV.
+          - name: _loaded_at
+            description: Timestamp when this load wrote the row.
+          - name: _source_file
+            description: CSV file name the row was read from.
+
+      - name: transactions
+        description: One card transaction per row, including fraud labels and injected defects.
+        columns:
+          - name: txn_id
+            description: Transaction identifier.
+          - name: customer_id
+            description: Cardholder. CUST0000000 does not exist.
+          - name: amount
+            description: Transaction amount in Indian rupees, stored as text.
+          - name: merchant_category
+            description: Merchant category as sent by the card processor.
+          - name: country
+            description: ISO country code. Blank is a defect.
+          - name: device_id
+            description: Device that sent the transaction.
+          - name: txn_ts
+            description: Transaction timestamp, stored as text.
+          - name: is_fraud
+            description: 1 if the transaction was fraud, 0 if it was not. Blank is a defect, not a no.
+          - name: _src_row
+            description: Position of the row in the CSV.
+          - name: _loaded_at
+            description: Timestamp when this load wrote the row.
+          - name: _source_file
+            description: CSV file name the row was read from.
+
+      - name: loan_performance
+        description: >
+          One booked loan per row. A blank dpd90_within_12m means the outcome
+          is not known yet. That blank is not a defect.
+        columns:
+          - name: application_id
+            description: Booked application. APP00000000 does not exist.
+          - name: customer_id
+            description: Person the loan was booked for.
+          - name: disbursed_amount
+            description: Amount actually disbursed, in Indian rupees, stored as text.
+          - name: disbursement_ts
+            description: When the money was disbursed, stored as text.
+          - name: months_on_book
+            description: Whole months from disbursement to the portfolio as-of date.
+          - name: max_dpd_12m
+            description: Worst days-past-due seen on the loan.
+          - name: dpd90_within_12m
+            description: 1 if the loan reached 90 days past due, 0 if it completed 12 months without that, blank if it is too early to say.
+          - name: _src_row
+            description: Position of the row in the CSV.
+          - name: _loaded_at
+            description: Timestamp when this load wrote the row.
+          - name: _source_file
+            description: CSV file name the row was read from.
+
+      - name: expected_issues
+        description: Defect counts copied from data/raw/manifest.json by the loader.
+        columns:
+          - name: table_name
+            description: Raw table the defect was injected into.
+          - name: issue
+            description: Defect name, matching reject_reason in staging.
+          - name: rows_affected
+            description: How many times the generator applied this defect.

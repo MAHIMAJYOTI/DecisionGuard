@@ -1,0 +1,93 @@
+# Challenger policy. Phase 4 compares this with credit_v1 on the same book.
+# Three deliberate changes, and nothing else:
+#   bureau cutoff 580 instead of 600
+#   DTI cutoff 55% instead of 50%
+#   a tighter probability band for thin-file customers
+# Same model as the champion, so a difference in decisions is the policy.
+
+version: credit_v2
+effective_date: "2026-10-01"
+owner: credit-policy
+description: >
+  Challenger policy. Lets in scores from 580 and DTI up to 55%, and demands
+  a lower default probability before a thin-file customer is approved.
+kind: credit
+model_version: credit_lr_v1
+
+data_checks:
+  - field: income
+    decision: REFER
+    reason: MISSING_INCOME
+  - field: bureau_score
+    decision: REFER
+    reason: MISSING_BUREAU
+  - field: age
+    decision: REFER
+    reason: MISSING_AGE
+  - field: debt_to_income
+    decision: REFER
+    reason: MISSING_DTI
+  - field: num_delinquencies_24m
+    decision: REFER
+    reason: MISSING_DELINQUENCIES
+
+policy_rules:
+  - field: age
+    op: lt
+    value: 21
+    decision: DECLINE
+    reason: AGE_BELOW_21
+  - field: bureau_score
+    op: lt
+    value: 580
+    decision: DECLINE
+    reason: BUREAU_SCORE_BELOW_580
+  - field: debt_to_income
+    op: gt
+    value: 0.55
+    decision: DECLINE
+    reason: DTI_ABOVE_55
+  - field: num_delinquencies_24m
+    op: gte
+    value: 3
+    decision: DECLINE
+    reason: DELINQUENCIES_24M_AT_LEAST_3
+  - field: income
+    op: lt
+    value: 180000
+    decision: DECLINE
+    reason: INCOME_BELOW_1_8_LAKH
+
+score_bands:
+  approve_max_pd: 0.08
+  refer_max_pd: 0.15
+  thin_file:
+    field: total_credit_limit
+    op: lte
+    value: 0
+    approve_max_pd: 0.03
+    refer_max_pd: 0.07
+
+risk_bands:
+  - name: high
+    max_score: 599
+  - name: medium
+    max_score: 699
+  - name: low
+    max_score: 799
+  - name: very_low
+    max_score: 900
+
+limit_rules:
+  - risk_band: high
+    income_fraction: 0.08
+    cap: 50000
+  - risk_band: medium
+    income_fraction: 0.15
+    cap: 200000
+  - risk_band: low
+    income_fraction: 0.30
+    cap: 500000
+  - risk_band: very_low
+    income_fraction: 0.50
+    cap: 1000000

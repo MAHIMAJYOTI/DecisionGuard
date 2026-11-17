@@ -1,0 +1,53 @@
+{
+  "strategy_version": "credit_v1",
+  "model_version": "credit_lr_v1",
+  "applications": 49366,
+  "decisions": [
+    {
+      "decision": "APPROVE",
+      "count": 20145,
+      "rate": 0.408074383178706
+    },
+    {
+      "decision": "REFER",
+      "count": 9493,
+      "rate": 0.1922983429891018
+    },
+    {
+      "decision": "DECLINE",
+      "count": 19728,
+      "rate": 0.3996272738321922
+    }
+  ],
+  "top_decline_reasons": [
+    {
+      "reason": "DTI_ABOVE_50",
+      "count": 14619
+    },
+    {
+      "reason": "INCOME_BELOW_1_8_LAKH",
+      "count": 10430
+    },
+    {
+      "reason": "AGE_BELOW_21",
+      "count": 4122
+    },
+    {
+      "reason": "MODEL_PD_ABOVE_DECLINE_CUTOFF",
+      "count": 3114
+    },
+    {
+      "reason": "BUREAU_SCORE_BELOW_600",
+      "count": 3024
+    },
+    {
+      "reason": "DELINQUENCIES_24M_AT_LEAST_3",
+      "count": 848
+    },
+    {
+      "reason": "THIN_FILE",
+      "count": 152
+    }
+  ],
+  "decline_reason_note": "One decline can carry more than one reason, so the reason counts add up to more than the number of declined applications."
+}

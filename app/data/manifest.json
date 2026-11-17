@@ -1,0 +1,126 @@
+{
+  "exported_at": "2026-10-15T15:35:51.080528+00:00",
+  "as_of_date": "2026-10-01",
+  "warehouse": "data/warehouse.duckdb",
+  "sklearn": "1.5.2",
+  "models": [
+    "credit_lr_v1",
+    "fraud_hgb_v1"
+  ],
+  "strategies": [
+    "credit_v1",
+    "credit_v2",
+    "fraud_v1",
+    "fraud_v2"
+  ],
+  "data_bytes": 1684045,
+  "largest_file": "data/fraud_transactions_sample.parquet",
+  "largest_file_bytes": 1166818,
+  "files": [
+    {
+      "path": "requirements.txt",
+      "bytes": 300
+    },
+    {
+      "path": "streamlit_app.py",
+      "bytes": 24844
+    },
+    {
+      "path": "data/credit_applications_sample.parquet",
+      "bytes": 440933
+    },
+    {
+      "path": "data/credit_model.json",
+      "bytes": 2776
+    },
+    {
+      "path": "data/data_quality.json",
+      "bytes": 4650
+    },
+    {
+      "path": "data/decision_mix.json",
+      "bytes": 1142
+    },
+    {
+      "path": "data/fraud_features.json",
+      "bytes": 961
+    },
+    {
+      "path": "data/fraud_model.json",
+      "bytes": 2926
+    },
+    {
+      "path": "data/fraud_transactions_sample.parquet",
+      "bytes": 1166818
+    },
+    {
+      "path": "data/golden.json",
+      "bytes": 92
+    },
+    {
+      "path": "data/portfolio_kpis.json",
+      "bytes": 289
+    },
+    {
+      "path": "data/portfolio_summary.parquet",
+      "bytes": 33578
+    },
+    {
+      "path": "data/samples.json",
+      "bytes": 203
+    },
+    {
+      "path": "data/strategy_change.json",
+      "bytes": 7947
+    },
+    {
+      "path": "data/strategy_change_v1_to_v2.html",
+      "bytes": 10791
+    },
+    {
+      "path": "data/strategy_change_v1_to_v2.md",
+      "bytes": 8208
+    },
+    {
+      "path": "models/credit_lr_v1/metadata.json",
+      "bytes": 5436
+    },
+    {
+      "path": "models/credit_lr_v1/model.joblib",
+      "bytes": 2064
+    },
+    {
+      "path": "models/fraud_hgb_v1/metadata.json",
+      "bytes": 2744
+    },
+    {
+      "path": "models/fraud_hgb_v1/model.joblib",
+      "bytes": 249874
+    },
+    {
+      "path": "strategies/credit_strategy_v1.yaml",
+      "bytes": 2932
+    },
+    {
+      "path": "strategies/credit_strategy_v2.yaml",
+      "bytes": 2182
+    },
+    {
+      "path": "strategies/fraud_strategy_v1.yaml",
+      "bytes": 1914
+    },
+    {
+      "path": "strategies/fraud_strategy_v2.yaml",
+      "bytes": 1632
+    },
+    {
+      "path": "strategies/schema/credit_strategy.schema.json",
+      "bytes": 3620
+    },
+    {
+      "path": "strategies/schema/fraud_strategy.schema.json",
+      "bytes": 2385
+    }
+  ],
+  "note": "All rows are synthetic. The snapshot is a sample plus summaries, not the warehouse."
+}

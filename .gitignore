@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Generated extracts are large and are rebuilt by `python -m src.data_gen`.
+data/raw/*
+!data/raw/.gitkeep
+
+# Local warehouse and dbt build output. Rebuild with the Phase 2 commands.
+data/*.duckdb
+data/*.duckdb.wal
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+
+# Fitted models. Rebuild with `python -m src.models`.
+artifacts/
+
+# The Streamlit demo commits its snapshot and a copy of the models.
+# Do not ignore app/data or app/models. Both are small on purpose.

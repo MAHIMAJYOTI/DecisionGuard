@@ -1,0 +1,109 @@
+{
+  "model_version": "credit_lr_v1",
+  "model_type": "logistic_regression",
+  "split": "oldest 80% of applications on or before the as-of date minus 12 months",
+  "maturity_cutoff": "2025-10-01",
+  "n_train": 12519,
+  "n_test": 3130,
+  "bad_rate_train": 0.0761242910775621,
+  "bad_rate_test": 0.07156549520766774,
+  "metrics": {
+    "auc": 0.7064171418739553,
+    "gini": 0.41283428374791065,
+    "ks": 0.30771003342837483
+  },
+  "calibration_deciles": [
+    {
+      "decile": 1,
+      "n": 313,
+      "predicted_pd": 0.019035507988606568,
+      "actual_bad_rate": 0.006389776357827476
+    },
+    {
+      "decile": 2,
+      "n": 313,
+      "predicted_pd": 0.02915187550040432,
+      "actual_bad_rate": 0.022364217252396165
+    },
+    {
+      "decile": 3,
+      "n": 313,
+      "predicted_pd": 0.03718584818685798,
+      "actual_bad_rate": 0.05750798722044728
+    },
+    {
+      "decile": 4,
+      "n": 313,
+      "predicted_pd": 0.04507624685193699,
+      "actual_bad_rate": 0.02875399361022364
+    },
+    {
+      "decile": 5,
+      "n": 313,
+      "predicted_pd": 0.05380482051306556,
+      "actual_bad_rate": 0.04792332268370607
+    },
+    {
+      "decile": 6,
+      "n": 313,
+      "predicted_pd": 0.06522744984284408,
+      "actual_bad_rate": 0.07028753993610223
+    },
+    {
+      "decile": 7,
+      "n": 313,
+      "predicted_pd": 0.07898141839411754,
+      "actual_bad_rate": 0.08626198083067092
+    },
+    {
+      "decile": 8,
+      "n": 313,
+      "predicted_pd": 0.09597638577393325,
+      "actual_bad_rate": 0.07987220447284345
+    },
+    {
+      "decile": 9,
+      "n": 313,
+      "predicted_pd": 0.12515109766570987,
+      "actual_bad_rate": 0.1182108626198083
+    },
+    {
+      "decile": 10,
+      "n": 313,
+      "predicted_pd": 0.20137351608827564,
+      "actual_bad_rate": 0.19808306709265175
+    }
+  ],
+  "coefficients": [
+    {
+      "feature": "bureau_score",
+      "coefficient": -0.012429712487474298,
+      "odds_ratio": 0.9876472173204432,
+      "expected_sign": "negative"
+    },
+    {
+      "feature": "debt_to_income",
+      "coefficient": 1.471837025717807,
+      "odds_ratio": 4.3572321409679775,
+      "expected_sign": "positive"
+    },
+    {
+      "feature": "num_delinquencies_24m",
+      "coefficient": 0.4078943076681253,
+      "odds_ratio": 1.5036482286836783,
+      "expected_sign": "positive"
+    },
+    {
+      "feature": "utilisation",
+      "coefficient": 1.2389428163953853,
+      "odds_ratio": 3.4519621772445603,
+      "expected_sign": "positive"
+    },
+    {
+      "feature": "num_enquiries_6m",
+      "coefficient": 0.14985791067895607,
+      "odds_ratio": 1.1616691702173665,
+      "expected_sign": "positive"
+    }
+  ]
+}

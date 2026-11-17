@@ -1,0 +1,30 @@
+{
+  "by_label": [
+    {
+      "is_fraud": 0,
+      "transactions": 495969,
+      "txn_count_1h": 0.02924174696402396,
+      "txn_amount_1h": 58.61957289669307,
+      "txn_count_24h": 0.5255610733735374,
+      "txn_amount_24h": 1081.4996676001967,
+      "avg_amount_30d": 2058.935849764108,
+      "amount_vs_avg_30d": 1.3625266809033634,
+      "is_new_device": 0.09388691631936673,
+      "is_foreign_country": 0.002177555452054463,
+      "is_night": 0.0378330097243981
+    },
+    {
+      "is_fraud": 1,
+      "transactions": 2492,
+      "txn_count_1h": 0.7375601926163724,
+      "txn_amount_1h": 145.26775280898875,
+      "txn_count_24h": 0.9763242375601926,
+      "txn_amount_24h": 652.4645144462279,
+      "avg_amount_30d": 1819.028731089459,
+      "amount_vs_avg_30d": 7.733142107686249,
+      "is_new_device": 0.29012841091492775,
+      "is_foreign_country": 0.24077046548956663,
+      "is_night": 0.23715890850722313
+    }
+  ]
+}

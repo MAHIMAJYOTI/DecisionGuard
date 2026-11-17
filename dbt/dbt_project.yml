@@ -1,0 +1,37 @@
+# DecisionGuard warehouse models.
+# Run from the project root with:
+#   dbt build --project-dir dbt --profiles-dir dbt
+
+name: decisionguard
+version: "1.0.0"
+config-version: 2
+profile: decisionguard
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# Frozen "today" for the portfolio. The generator used the same date.
+# EMI inputs match src/data_gen/performance.py.
+vars:
+  as_of_date: "2026-10-01"
+  personal_loan_apr: 0.16
+  existing_debt_emi_fraction: 0.03
+  credit_card_obligation_fraction: 0.05
+
+models:
+  decisionguard:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: table
+    marts:
+      +schema: marts
+      +materialized: table

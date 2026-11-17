@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fraud strategy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "effective_date",
+    "owner",
+    "description",
+    "kind",
+    "model_version",
+    "data_checks",
+    "rules",
+    "score_bands"
+  ],
+  "properties": {
+    "version": {"type": "string", "minLength": 1},
+    "effective_date": {"type": "string", "format": "date"},
+    "owner": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "kind": {"const": "fraud"},
+    "model_version": {"type": "string", "minLength": 1},
+    "data_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/data_check"}
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/rule"}
+    },
+    "score_bands": {"$ref": "#/$defs/score_bands"}
+  },
+  "$defs": {
+    "data_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "decision", "reason"],
+      "properties": {
+        "field": {"type": "string", "minLength": 1},
+        "decision": {"const": "CHALLENGE"},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "op", "value"],
+      "properties": {
+        "field": {"type": "string", "minLength": 1},
+        "op": {"enum": ["lt", "lte", "gt", "gte", "eq"]},
+        "value": {"type": "number"}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "reason", "when"],
+      "properties": {
+        "decision": {"enum": ["CHALLENGE", "BLOCK"]},
+        "reason": {"type": "string", "minLength": 1},
+        "when": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/condition"}
+        }
+      }
+    },
+    "score_bands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["challenge_min_pd", "block_min_pd"],
+      "properties": {
+        "challenge_min_pd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "block_min_pd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>DecisionGuard review brief</title>
+<style>
+  @page { size: A4; margin: 14mm 13mm 16mm 13mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Calibri, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.42;
+    color: #1b2430;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  h1 {
+    font-size: 16.5pt;
+    line-height: 1.2;
+    color: #0e6b6b;
+    margin: 0 0 8px;
+    page-break-before: always;
+  }
+  h1.first { page-break-before: auto; font-size: 22pt; }
+  h2 { font-size: 12.5pt; color: #0e6b6b; margin: 14px 0 6px; }
+  h3 { font-size: 11pt; margin: 12px 0 4px; }
+  p { margin: 0 0 8px; }
+  ul, ol { margin: 4px 0 10px; padding-left: 18px; }
+  li { margin: 0 0 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 9.4pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #d5d0c8; padding: 4px 6px; vertical-align: top; text-align: left; }
+  th { background: #f3f1ec; font-weight: 650; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  code, .path { font-family: Consolas, "Courier New", monospace; font-size: 9pt; }
+  .kicker { letter-spacing: 0.12em; text-transform: uppercase; font-size: 8.5pt; color: #0e6b6b; font-weight: 700; margin: 0 0 6px; }
+  .sub { color: #3d4a5c; margin-top: 0; }
+  .say { background: #f3f7f7; border-left: 4px solid #0e6b6b; padding: 8px 12px; margin: 8px 0 12px; }
+  .warn { background: #f8e8eb; border-left: 4px solid #9b2335; padding: 8px 12px; margin: 8px 0 12px; }
+  .note { background: #f8f1e3; border-left: 4px solid #a15c07; padding: 8px 12px; margin: 8px 0 12px; }
+  .cover { page-break-after: always; padding-top: 28mm; }
+  .muted { color: #5c6b7a; font-size: 9.5pt; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <p class="kicker">DecisionGuard</p>
+  <h1 class="first">Review brief</h1>
+  <p class="sub">Credit and fraud decisions on a synthetic Indian book. Everything below is what to say in the review. The recommendation is already calculated: overall NO-GO.</p>
+  <p>Frozen as-of date: <strong>1 October 2026</strong>. Seed: <strong>42</strong>. Database file: <code>data/warehouse.duckdb</code>.</p>
+  <div class="warn">
+    <strong>The sentence.</strong> Credit v2 is NO-GO because the newly approved loans default at 8.24%, more than 1.25 times the 5.80% bad rate of champion approvals. Fraud v2 is a conditional go. Expected loss falling 0.9% does not overturn the credit result.
+  </div>
+  <p class="muted">Source of the numbers: the marts after staging, the saved model metadata, and reports/strategy_change_v1_to_v2.md. Amounts are Indian rupees.</p>
+</section>
+
+<h1>1. What the project is</h1>
+<p>DecisionGuard takes a loan application or a card payment, applies a written strategy, scores it with a saved model, and writes down why. The customers and the payments are synthetic. The strategies are YAML files. A challenger is scored on the same rows as the champion before anyone is asked to ship it.</p>
+<div class="say">We built a local credit and fraud decisioning system. The book is fake and frozen on 1 October 2026. The policy is versioned YAML. v2 is scored on the same rows as v1. The written recommendation is NO-GO.</div>
+<p>There are two policies, and they do different jobs.</p>
+<ul>
+  <li><strong>The live policy</strong> is the YAML in <code>strategies/</code>. That is what the engine runs.</li>
+  <li><strong>The historical booking rules</strong> in <code>src/data_gen/performance.py</code> only decide which synthetic loans get a repayment row. They created the outcomes the model can learn from.</li>
+</ul>
+<p>For an analyst review this is already the right shape: a clean book, a champion and a challenger, a swap of who gets approved, an expected-loss number with the assumption stated, and a recommendation. The book is synthetic. The method is what transfers to a real book. A more complicated model is not required for the review.</p>
+
+<h2>The path a row takes</h2>
+<ol>
+  <li><strong>Generate.</strong> <code>python -m src.data_gen</code> writes five extracts, then damages some rows on purpose.</li>
+  <li><strong>Load.</strong> <code>python -m src.warehouse</code> lands every column in DuckDB as text.</li>
+  <li><strong>Transform.</strong> <code>dbt build --project-dir dbt --profiles-dir dbt</code> types the rows, rejects the bad ones with a reason, builds features, and publishes the marts.</li>
+  <li><strong>Train.</strong> <code>python -m src.models</code> fits the credit and fraud models and saves them.</li>
+  <li><strong>Decide.</strong> <code>python -m src.decision_engine</code> applies a named YAML, then the saved model.</li>
+  <li><strong>Compare.</strong> <code>python -m src.validation</code> scores v1 against v2, runs the golden tests, and writes the report.</li>
+  <li><strong>Show.</strong> <code>streamlit run app/streamlit_app.py</code> reads a snapshot in <code>app/data</code>. The dashboard does not open the warehouse.</li>
+</ol>
+
+<h2>One database, four schemas</h2>
+<p>The database is one file, <code>data/warehouse.duckdb</code>. The layers are schemas inside that file.</p>
+<table>
+  <tr><th>Schema</th><th>What lives there</th></tr>
+  <tr><td><code>raw</code></td><td>The CSV rows, every business column still text, plus <code>_src_row</code>, <code>_loaded_at</code>, <code>_source_file</code>.</td></tr>
+  <tr><td><code>staging</code></td><td>Clean typed tables (<code>stg_customers</code> and the rest) and <code>stg_rejected_records</code>.</td></tr>
+  <tr><td><code>intermediate</code></td><td>Credit features and fraud features.</td></tr>
+  <tr><td><code>marts</code></td><td>The tables the models and the engine read: credit applications, fraud transactions, portfolio summary, data quality.</td></tr>
+</table>
+<p><code>prep_*</code> models are queries, not stored tables. dbt pastes them into the staging models. A rejected row is stored with its reason. It is not deleted quietly.</p>
+
+<h1>2. Size of the book</h1>
+<p>The generator is asked for 50,000 customers, 50,000 applications, and 500,000 card transactions, with a 0.5% fraud rate. “Today” is frozen at 1 October 2026 so a rerun next month still builds the same dates.</p>
+<table>
+  <tr><th>Window</th><th>Start</th><th>Length</th><th>Why</th></tr>
+  <tr><td>Applications</td><td>1 Oct 2024</td><td>730 days</td><td>Two years, so some loans have a full 12 months and some are still too new.</td></tr>
+  <tr><td>Card transactions</td><td>3 Jul 2026</td><td>90 days</td><td>Enough for a last-hour, last-day, and last-30-days feature. About 45% of customers have a card. The rest never appear in the transaction file.</td></tr>
+</table>
+<p>Quote the <strong>cleaned</strong> book in the review. These are the mart counts after bad rows are removed.</p>
+<table>
+  <tr><th>What you say</th><th class="num">Number</th></tr>
+  <tr><td>Customers kept</td><td class="num">48,436</td></tr>
+  <tr><td>Applications kept</td><td class="num">49,366</td></tr>
+  <tr><td>Booked loans on the credit mart</td><td class="num">32,401</td></tr>
+  <tr><td>Good / bad / still too new</td><td class="num">16,195 / 1,823 / 14,383</td></tr>
+  <tr><td>Never booked</td><td class="num">16,965</td></tr>
+  <tr><td>Card transactions kept</td><td class="num">498,461</td></tr>
+  <tr><td>Frauds, and the rate</td><td class="num">2,492 &nbsp; 0.50%</td></tr>
+  <tr><td>Amount disbursed</td><td class="num">about 584 crore</td></tr>
+</table>
+<div class="say">The book was built as 50,000 customers, 50,000 applications, and 500,000 transactions, frozen on 1 October 2026. After cleaning we keep 48,436 customers, 49,366 applications, and 498,461 transactions, of which 2,492 are fraud. 32,401 loans were booked. 16,195 are good, 1,823 are bad, and 14,383 are still too new to judge.</div>
+
+<h1>3. The five files</h1>
+<p>Each extract is written twice, to <code>data/raw/&lt;name&gt;.csv</code> and the same rows as Parquet. The warehouse loads the CSV. Names and government ids are left out on purpose.</p>
+
+<h2>Customers — data/raw/customers.csv</h2>
+<p>Built in <code>src/data_gen/customers.py</code>. One row per person. Id format <code>CUST0000001</code>. Zero income is allowed for some unemployed customers. That zero is a real value.</p>
+<table>
+  <tr><th>Column</th><th>Meaning</th></tr>
+  <tr><td><code>customer_id</code></td><td>The person. Join key for bureau, applications, and transactions.</td></tr>
+  <tr><td><code>age</code></td><td>Age in years.</td></tr>
+  <tr><td><code>income</code></td><td>Annual income in rupees.</td></tr>
+  <tr><td><code>employment_type</code></td><td>salaried, self_employed, student, retired, unemployed, homemaker.</td></tr>
+  <tr><td><code>city</code></td><td>One of 14 cities, Mumbai through Coimbatore.</td></tr>
+  <tr><td><code>existing_debt</code></td><td>Outstanding debt in rupees.</td></tr>
+  <tr><td><code>months_at_address</code></td><td>Time at the current address.</td></tr>
+</table>
+<p>Clean file 50,000 rows. 80 duplicate ids are added, so the CSV has <strong>50,080</strong> rows. Staging keeps <strong>48,436</strong>. Rejected file rows: <strong>1,644</strong>.</p>
+
+<h2>Bureau — data/raw/credit_bureau.csv</h2>
+<p>Built in <code>src/data_gen/bureau.py</code> from the customer attributes plus noise of about 35 points. The score is clipped to 300–900. A middle customer lands near 700. The recipe used to build the score is never written to the file. The loan outcome is created later and is never copied back into the score. This is one snapshot per customer, not a history of bureau pulls.</p>
+<table>
+  <tr><th>Column</th><th>Meaning</th></tr>
+  <tr><td><code>customer_id</code></td><td>Same id as the customer file.</td></tr>
+  <tr><td><code>bureau_score</code></td><td>Integer from 300 to 900.</td></tr>
+  <tr><td><code>num_enquiries_6m</code></td><td>Enquiries in the last 6 months.</td></tr>
+  <tr><td><code>num_delinquencies_24m</code></td><td>Delinquencies in the last 24 months.</td></tr>
+  <tr><td><code>total_credit_limit</code></td><td>Existing limit in rupees. About 8% are 0. That is a thin file, and it is kept.</td></tr>
+  <tr><td><code>utilisation</code></td><td>Balance divided by limit. 0.40 means 40% drawn. A thin file is stored as 0. A value of 1.10 stays. Negative or 4.5 is damage.</td></tr>
+</table>
+<p>40 customers are removed from the file and 40 duplicate ids are added, so the CSV still has <strong>50,000</strong> rows. Staging keeps <strong>49,336</strong>. Rejected file rows: <strong>664</strong>. The 40 missing people are recorded separately as <code>missing_customer</code>, with no <code>_src_row</code>, because there is no bureau line to point at.</p>
+
+<h2>Applications — data/raw/loan_applications.csv</h2>
+<p>Built in <code>src/data_gen/applications.py</code>. Customers are drawn with replacement, so some people apply twice and some never apply. About 62% personal loan, 38% credit card. Channels about 34% branch, 41% web, 25% app. Branch applications fall between 10:00 and 17:00. Ids are assigned after sorting by time, so <code>APP00000001</code> is the earliest.</p>
+<table>
+  <tr><th>Column</th><th>Meaning</th></tr>
+  <tr><td><code>application_id</code></td><td>The request. Joins to the performance file.</td></tr>
+  <tr><td><code>customer_id</code></td><td>Who applied. Joins to the customer and the bureau.</td></tr>
+  <tr><td><code>product</code></td><td><code>personal loan</code> or <code>credit card</code>, those exact lowercase words.</td></tr>
+  <tr><td><code>requested_amount</code></td><td>Rupees asked for. Loans centre near 2.5 lakh. Card limits centre near 80,000.</td></tr>
+  <tr><td><code>tenure_months</code></td><td>12, 24, 36, 48, or 60 for a loan. <strong>0 for a card</strong>, because a card has no fixed term. That 0 is a real value.</td></tr>
+  <tr><td><code>application_ts</code></td><td>When it arrived, inside the two years before 1 Oct 2026.</td></tr>
+  <tr><td><code>channel</code></td><td><code>branch</code>, <code>web</code>, or <code>app</code>.</td></tr>
+</table>
+<p>40 duplicate application ids are added, so the CSV has <strong>50,040</strong> rows. Staging keeps <strong>49,366</strong>. Rejected file rows: <strong>674</strong>. The reason list adds to 675 because one row carries two defects. A row with two defects is still one rejected row.</p>
+
+<h2>Performance — data/raw/loan_performance.csv</h2>
+<p>Built in <code>src/data_gen/performance.py</code>. One row per <strong>booked</strong> loan. Declined applications are absent. That is how servicing data works: there is no repayment history for a loan that was never given.</p>
+<table>
+  <tr><th>Column</th><th>Meaning</th></tr>
+  <tr><td><code>application_id</code></td><td>The booked application.</td></tr>
+  <tr><td><code>customer_id</code></td><td>The person.</td></tr>
+  <tr><td><code>disbursed_amount</code></td><td>Amount actually given. Loans are sometimes cut to 92–100% of the request. Cards are opened at the requested limit.</td></tr>
+  <tr><td><code>disbursement_ts</code></td><td>1 to 7 days after the application, and never after the as-of date.</td></tr>
+  <tr><td><code>months_on_book</code></td><td>Whole months from disbursement to 1 Oct 2026.</td></tr>
+  <tr><td><code>max_dpd_12m</code></td><td>Worst days past due. A bad loan is at least 90.</td></tr>
+  <tr><td><code>dpd90_within_12m</code></td><td>1 if the loan reached 90+ DPD, 0 if it finished 12 months without that, blank if it is too early to say.</td></tr>
+</table>
+<p>The raw file has <strong>32,874</strong> rows. Staging keeps <strong>32,805</strong>. Rejected file rows: <strong>69</strong> (20 bad dates, 20 exact duplicate copies, 15 negative amounts, 15 orphan application ids; one row carries two reasons). The credit mart shows <strong>32,401 booked</strong>, because a loan counts only when the application itself also survived staging.</p>
+<div class="note">
+  <strong>A blank 90-day flag stays.</strong> It is not a data-quality error, and quality.py does not punch extra blanks into this column.
+  Under 3 months the flag is always blank, because 90 days past due cannot have happened yet.
+  From 3 months up to 12 months the flag is 1 only if the bad event has already happened. Otherwise it stays blank. A young loan is not called good.
+  At 12 months or more the flag is 1 or 0.
+</div>
+<p><code>APP00000000</code> is the injected orphan. Several different loans were overwritten with that same id, so sharing the id does not make them duplicates. A duplicate is an exact copy of an earlier row.</p>
+
+<h2>Transactions — data/raw/transactions.csv</h2>
+<p>Built in <code>src/data_gen/transactions.py</code>. One row per card purchase. About 0.5% of clean rows are fraud, and the fraud is built as patterns a strategy can look for.</p>
+<table>
+  <tr><th>Column</th><th>Meaning</th></tr>
+  <tr><td><code>txn_id</code></td><td>The payment.</td></tr>
+  <tr><td><code>customer_id</code></td><td>The cardholder.</td></tr>
+  <tr><td><code>amount</code></td><td>Rupees.</td></tr>
+  <tr><td><code>merchant_category</code></td><td>grocery, fuel, restaurant, ecommerce, travel, atm, electronics, utilities, jewellery, healthcare.</td></tr>
+  <tr><td><code>country</code></td><td>ISO code. Home country is IN.</td></tr>
+  <tr><td><code>device_id</code></td><td>The phone or device.</td></tr>
+  <tr><td><code>txn_ts</code></td><td>Timestamp inside the 90-day card window.</td></tr>
+  <tr><td><code>is_fraud</code></td><td>1 or 0. A blank flag is a defect. It does not mean genuine.</td></tr>
+</table>
+<p>120 duplicate ids are added, so the CSV has <strong>500,120</strong> rows. Staging keeps <strong>498,461</strong>. Rejected file rows: <strong>1,659</strong>.</p>
+<table>
+  <tr><th>Fraud pattern</th><th class="num">Share of fraud rows</th><th>What it looks like</th></tr>
+  <tr><td>Burst</td><td class="num">28%</td><td>Several small tickets in a few minutes. Card testing.</td></tr>
+  <tr><td>Foreign + new device</td><td class="num">24%</td><td>A country the customer does not live in, on a device they have not used.</td></tr>
+  <tr><td>Night high value</td><td class="num">18%</td><td>A large ticket between midnight and 5am.</td></tr>
+  <tr><td>Amount spike</td><td class="num">15%</td><td>A ticket about 10 times that customer’s own typical spend.</td></tr>
+  <tr><td>Stealth</td><td class="num">15%</td><td>A fraud label on an otherwise ordinary purchase. The rulebook cannot catch every row.</td></tr>
+</table>
+<p>A few legitimate grocery bursts are also written: five genuine grocery tickets for one customer inside 20 minutes. A velocity rule will block some of those. That is a false positive, and it is there on purpose.</p>
+<div class="say">The labels were built from these patterns, so a rule that copies a pattern will look strong. Stealth fraud and the genuine grocery bursts stop it being a perfect score. The model is measured on a time holdout.</div>
+
+<h1>4. Joins</h1>
+<p>A join sticks two lists together where a shared id matches. The application list is the one we keep. Customer columns and bureau columns are attached onto it.</p>
+<p>In <code>int_customer_credit_features.sql</code>:</p>
+<ul>
+  <li><code>applications LEFT JOIN customers ON customer_id</code></li>
+  <li><code>applications LEFT JOIN bureau ON customer_id</code></li>
+</ul>
+<p>A left join keeps every application. When the other list has no match, those columns are blank. A person with no clean bureau row still reaches the mart with a null score. The engine then refers the application, reason <code>MISSING_BUREAU</code>.</p>
+<p>In <code>mart_credit_applications.sql</code> the performance file is attached with <code>application_id</code>. Every application stays. The outcome column says which situation it is:</p>
+<table>
+  <tr><th>outcome_status</th><th>Meaning</th></tr>
+  <tr><td><code>not_booked</code></td><td>No performance row. The application was never given.</td></tr>
+  <tr><td><code>not_yet_known</code></td><td>Booked, and <code>dpd90_within_12m</code> is blank. Too young to call.</td></tr>
+  <tr><td><code>bad</code></td><td>Booked, and the flag is 1. Reached 90+ DPD.</td></tr>
+  <tr><td><code>good</code></td><td>Booked, finished 12 months, flag is 0.</td></tr>
+</table>
+<p>Two keys to remember. <code>customer_id</code> brings the person and the bureau onto the application. <code>application_id</code> brings the repayment outcome onto the application.</p>
+
+<h1>5. What staging rejects</h1>
+<p>Every raw column arrives as text. Staging is the first place a value becomes a number. A bad cast becomes a reject reason, not a failed job. DuckDB uses <code>TRY_CAST</code>. BigQuery’s name for the same idea is <code>SAFE_CAST</code>. The first copy of a duplicated id is the one that can survive. Later copies are duplicates. <code>_src_row</code> is the position in the file, so “first” is stable.</p>
+<table>
+  <tr><th>File</th><th>A row is rejected when</th></tr>
+  <tr><td>Customers</td><td>Later copy of the same id. Blank income, city, or employment. Age blank, under 18, or over 100. Existing debt negative.</td></tr>
+  <tr><td>Bureau</td><td>Later copy of the same id. Score blank. Score under 300 or over 900. Utilisation negative or over 1.5. Plus 40 customers who are missing from the file entirely.</td></tr>
+  <tr><td>Applications</td><td>Later copy of the same application id. Amount blank or negative. Timestamp will not parse, year before 1990, or date after 1 Oct 2026. Product other than <code>personal loan</code> or <code>credit card</code> (case is kept, so <code>CREDIT CARD</code> fails). Channel other than branch, web, or app. Customer id not in the raw customer file. Those 25 orphans point at <code>CUST0000000</code>, an id that was never issued.</td></tr>
+  <tr><td>Performance</td><td>Exact copy of an earlier row. Application id not in the raw application file. Disbursement timestamp bad, or after the as-of date. Disbursed amount negative. A blank 90-day flag is kept.</td></tr>
+  <tr><td>Transactions</td><td>Later copy of the same txn id. Amount blank or negative. Timestamp bad or after the as-of date. Country blank. Merchant category not in the allowed list. Fraud flag blank or not 0/1. Customer id not in the raw customer file.</td></tr>
+</table>
+<p>Reason counts can add up to more than rejected rows, because one row can carry two defects. The data-quality mart counts distinct raw rows in the table total, and each reason on its own line.</p>
+<table>
+  <tr><th>Table</th><th class="num">Raw rows</th><th class="num">Kept</th><th class="num">Rejected rows</th></tr>
+  <tr><td>customers</td><td class="num">50,080</td><td class="num">48,436</td><td class="num">1,644</td></tr>
+  <tr><td>credit_bureau</td><td class="num">50,000</td><td class="num">49,336</td><td class="num">664</td></tr>
+  <tr><td>loan_applications</td><td class="num">50,040</td><td class="num">49,366</td><td class="num">674</td></tr>
+  <tr><td>loan_performance</td><td class="num">32,874</td><td class="num">32,805</td><td class="num">69</td></tr>
+  <tr><td>transactions</td><td class="num">500,120</td><td class="num">498,461</td><td class="num">1,659</td></tr>
+</table>
+
+<h1>6. The two policies</h1>
+<p>The historical booker and the YAML champion are different cutoffs. If a reviewer mixes them up, the swap story falls apart.</p>
+<table>
+  <tr><th>Rule</th><th>Historical booker (performance.py)</th><th>Champion YAML credit_v1</th><th>Challenger YAML credit_v2</th></tr>
+  <tr><td>Age</td><td>Decline under 21</td><td>Decline under 21</td><td>Same</td></tr>
+  <tr><td>Bureau score</td><td>Decline below 580. 580–639 is a refer band, booked 45% of the time.</td><td>Decline below 600. A score of exactly 600 passes this rule.</td><td>Decline below 580.</td></tr>
+  <tr><td>DTI</td><td>Decline above 60%</td><td>Decline above 50%. Exactly 50% passes.</td><td>Decline above 55%.</td></tr>
+  <tr><td>Delinquencies</td><td>3 or more is a decline</td><td>3 or more is a decline</td><td>Same</td></tr>
+  <tr><td>Income</td><td>Decline below 1.8 lakh a year</td><td>Same</td><td>Same</td></tr>
+  <tr><td>Everyone else</td><td>Booked 97% of the time. The missing 3% stands in for incomplete files.</td><td>Then the model score decides approve, refer, or decline.</td><td>Same model, tighter thin-file band.</td></tr>
+</table>
+<p>Debt-to-income is not stored on the raw performance file. It is recomputed in SQL from the raw inputs, with the same formula the simulator used.</p>
+<ul>
+  <li>Existing monthly payment = existing debt × 0.03.</li>
+  <li>Personal loan payment = standard annuity at 16% APR. Example: 100,000 rupees for 12 months is about 9,073 a month.</li>
+  <li>Card payment = 5% of the requested limit.</li>
+  <li>DTI = (existing + new) / (income / 12). If income is zero, DTI is stored as 99.</li>
+</ul>
+<p>The default flag on a booked loan is drawn from a logistic curve of bureau score, DTI, delinquencies, utilisation, and enquiries. Those coefficients belong to the simulator. They are not the fitted scorecard. At a score of 720, DTI 0.35, no delinquencies, and ordinary utilisation, the curve sits near 7%.</p>
+
+<h1>7. Features</h1>
+<h2>Credit features</h2>
+<p><code>intermediate.int_customer_credit_features</code> is one row per valid application: the application, the customer, the bureau, the income band, the bureau risk band, and the recomputed DTI. <code>marts.mart_credit_applications</code> adds the outcome. Income bands are under 3 lakh, 3 to 6, 6 to 12, and over 12 lakh. Bureau bands are high under 600, medium under 700, low under 800, otherwise very low.</p>
+
+<h2>Fraud features, and why the current row is excluded</h2>
+<p><code>intermediate.int_transaction_fraud_features</code> is one row per valid card transaction. A feature may use only transactions strictly earlier than the current row. If the current purchase were included, one huge ticket would pull its own average up and a spike would look milder.</p>
+<p>The DuckDB window ends 1 millisecond before the current timestamp:</p>
+<p><code>RANGE BETWEEN INTERVAL 1 HOUR PRECEDING AND INTERVAL 1 MILLISECOND PRECEDING</code></p>
+<p>The same idea in BigQuery is <code>RANGE BETWEEN 3600 PRECEDING AND 1 PRECEDING</code> on Unix seconds. Use 86400 for 24 hours and 2592000 for 30 days.</p>
+<table>
+  <tr><th>Feature</th><th>Meaning</th></tr>
+  <tr><td><code>txn_count_1h</code>, <code>txn_amount_1h</code></td><td>Count and amount in the previous hour, current row excluded.</td></tr>
+  <tr><td><code>txn_count_24h</code>, <code>txn_amount_24h</code></td><td>The previous 24 hours.</td></tr>
+  <tr><td><code>avg_amount_30d</code></td><td>Average amount over the previous 30 days. Blank when the customer has no earlier history.</td></tr>
+  <tr><td><code>amount_vs_avg_30d</code></td><td>This amount divided by that average.</td></tr>
+  <tr><td><code>is_new_device</code></td><td>1 the first time this device appears for this customer. <code>txn_id</code> breaks ties.</td></tr>
+  <tr><td><code>is_foreign_country</code></td><td>1 when the country is not IN.</td></tr>
+  <tr><td><code>is_night</code></td><td>1 from 00:00 up to but not including 05:00.</td></tr>
+</table>
+<p>When the model scores a first transaction it fills <code>has_prior_30d = 0</code>, average 0, and ratio 1. The rule engine does not use that fill. A missing ratio is not treated as “five times average”.</p>
+
+<h1>8. The two models</h1>
+<h2>Credit — credit_lr_v1</h2>
+<p>Logistic regression for the probability of 90+ DPD within 12 months. Training rows are booked loans with a known good or bad flag only. <code>not_booked</code> has no repayment history. <code>not_yet_known</code> is still too young. A blank flag is “not yet”, and it is not used as a good.</p>
+<div class="warn">
+  <strong>Reject inference.</strong> The old booking rules already turned away the riskier applicants. The model describes default risk among people the old policy was willing to book. Scoring a declined applicant is an extrapolation. Hard rules still run before the model, so the model is not asked to approve someone the YAML already forbids. A swap-in the old book never funded has a model PD and no observed outcome.
+</div>
+<p>A second bias is the dates. A loan is labelled good only after 12 months. It can be labelled bad from month 3. Training on every known row puts early defaults, and almost no goods, into the newest slice. The saved model drops every application after <strong>1 October 2025</strong> (as-of minus 12 months), then takes an out-of-time 80/20 split inside what remains.</p>
+<table>
+  <tr><th></th><th class="num">Old split (not saved)</th><th class="num">Matured split (saved)</th></tr>
+  <tr><td>Train bad rate</td><td class="num">0.0759</td><td class="num">0.0761</td></tr>
+  <tr><td>Test bad rate</td><td class="num">0.2000</td><td class="num">0.0716</td></tr>
+  <tr><td>AUC</td><td class="num">0.7059</td><td class="num">0.7064</td></tr>
+  <tr><td>Gini</td><td class="num">0.4119</td><td class="num">0.4128</td></tr>
+  <tr><td>KS</td><td class="num">0.3169</td><td class="num">0.3077</td></tr>
+  <tr><td>Train n / test n</td><td class="num">13,818 / 3,455</td><td class="num">12,519 / 3,130</td></tr>
+</table>
+<p>Known-outcome rows: 17,273. Matured rows: 15,649. The old test bad rate is 20% because the newest known rows are mostly early defaults. On the matured test, predicted PD and actual bad rate line up by decile. On the old split they do not. Decile 10 of the saved model predicts about 20.1% and the actual bad rate is about 19.8%.</p>
+<p>Features and the sign a higher value should have on default odds:</p>
+<table>
+  <tr><th>Feature</th><th>Expected sign</th><th class="num">Coefficient per original unit</th><th class="num">Odds ratio</th></tr>
+  <tr><td>bureau_score</td><td>negative</td><td class="num">−0.0124</td><td class="num">0.988</td></tr>
+  <tr><td>debt_to_income</td><td>positive</td><td class="num">1.472</td><td class="num">4.36</td></tr>
+  <tr><td>num_delinquencies_24m</td><td>positive</td><td class="num">0.408</td><td class="num">1.50</td></tr>
+  <tr><td>utilisation</td><td>positive</td><td class="num">1.239</td><td class="num">3.45</td></tr>
+  <tr><td>num_enquiries_6m</td><td>positive</td><td class="num">0.150</td><td class="num">1.16</td></tr>
+</table>
+<p>Age is left out because both very young and older customers are riskier, so one straight line has no single business sign. Income is a policy rule, and it already sits inside DTI. The regression is fit on standardised columns. The coefficients above are divided back by the training standard deviation, so they read as “per bureau point” or “per extra delinquency”, not per standard deviation.</p>
+
+<h2>Fraud — fraud_hgb_v1</h2>
+<p>HistGradientBoosting for the probability a card transaction is fraud. Oldest 80% of transactions train, newest 20% test. A random split would let a later pattern leak into the same customer’s training rows. <code>class_weight='balanced'</code> up-weights the fraud rows, because fraud is about half a percent. Without that, the model can look accurate by calling almost everything genuine. The cost shows up in the threshold table: a low cutoff catches more fraud and also stops more genuine customers.</p>
+<table>
+  <tr><th></th><th>Train</th><th>Test</th></tr>
+  <tr><td>Rows</td><td>398,768</td><td>99,693</td></tr>
+  <tr><td>Window</td><td>3 Jul 2026 to 13 Sep 2026 06:13</td><td>13 Sep 2026 06:13 to 30 Sep 2026</td></tr>
+  <tr><td>Fraud rate</td><td>0.40%</td><td>0.89%</td></tr>
+</table>
+<p>AUC 0.963. PR-AUC 0.805. Precision at 0.50 is 0.594. Recall at 0.50 is 0.835. The test fraud rate is higher because fraud is planted only from day 40 (12 Aug 2026), so a customer can have 30 days of history first. Before that date there are 0 frauds in 220,626 rows. The quiet stretch sits inside the training window.</p>
+<table>
+  <tr><th class="num">Threshold</th><th class="num">Alert rate</th><th class="num">Precision</th><th class="num">Fraud caught</th></tr>
+  <tr><td class="num">0.35</td><td class="num">3.6%</td><td class="num">0.21</td><td class="num">85%</td></tr>
+  <tr><td class="num">0.40</td><td class="num">1.7%</td><td class="num">0.45</td><td class="num">84%</td></tr>
+  <tr><td class="num">0.80</td><td class="num">about 1.1%</td><td class="num">higher</td><td class="num">about 82%</td></tr>
+</table>
+<p>v1 challenges from 0.35 and blocks from 0.80. v2 challenges from 0.40. The block cutoff stays at 0.80.</p>
+
+<h1>9. How one decision is made</h1>
+<p>Same input, same YAML, same model, same decision. The engine draws no random number. Code: <code>src/decision_engine/engine.py</code>. The YAML is checked against a JSON schema before any row is scored. A typo, a missing owner, or a decision spelled wrong fails there.</p>
+<h2>Credit, always in this order</h2>
+<ol>
+  <li><strong>Missing data is REFER.</strong> Missing income, bureau score, age, DTI, or delinquencies. The automated path never approves those rows, and it does not hard-decline them either. A person has to look.</li>
+  <li><strong>Any hard rule is DECLINE.</strong> Every hit is kept, in the order the YAML lists them. Age under 21. Bureau below the cutoff. DTI above the cutoff. 3 or more delinquencies in 24 months. Income below 1.8 lakh.</li>
+  <li><strong>Model score.</strong> Probability of 90+ DPD within 12 months.</li>
+  <li><strong>Band.</strong> At or below 8% approve. Above that and at or below 15% refer. Above 15% decline. A thin file (total credit limit at or below 0) uses a tighter pair: v1 is 5% and 10%, v2 is 3% and 7%.</li>
+  <li><strong>Limit, only on APPROVE.</strong> The smallest of the amount asked, income times a fraction, and the cap for that bureau band, rounded down to the nearest 1,000 rupees when the amount is at least 1,000.</li>
+</ol>
+<table>
+  <tr><th>Bureau band</th><th>Scores</th><th class="num">Income fraction</th><th class="num">Cap (rupees)</th></tr>
+  <tr><td>high</td><td>up to 599</td><td class="num">8%</td><td class="num">50,000</td></tr>
+  <tr><td>medium</td><td>up to 699</td><td class="num">15%</td><td class="num">2,00,000</td></tr>
+  <tr><td>low</td><td>up to 799</td><td class="num">30%</td><td class="num">5,00,000</td></tr>
+  <tr><td>very_low</td><td>up to 900</td><td class="num">50%</td><td class="num">10,00,000</td></tr>
+</table>
+<p>A row already referred for missing data is not also auto-declined. Both challengers use the same saved model, <code>credit_lr_v1</code>, so a difference in decisions is the policy.</p>
+
+<h2>Fraud</h2>
+<ol>
+  <li>Missing amount or timestamp is CHALLENGE. Never a silent allow.</li>
+  <li>Rules vote, and the model votes. The harsher vote wins. BLOCK beats CHALLENGE beats ALLOW.</li>
+</ol>
+<table>
+  <tr><th>Rule</th><th>When</th><th>v1</th><th>v2</th></tr>
+  <tr><td>Velocity</td><td>3 or more transactions in the prior hour</td><td>BLOCK</td><td>CHALLENGE</td></tr>
+  <tr><td>Foreign + new device</td><td>Both flags are 1</td><td>BLOCK</td><td>BLOCK</td></tr>
+  <tr><td>Amount vs average</td><td>More than 5 times the 30-day average</td><td>CHALLENGE</td><td>CHALLENGE</td></tr>
+  <tr><td>Night high value</td><td>Night, and amount at least 20,000</td><td>CHALLENGE</td><td>CHALLENGE</td></tr>
+  <tr><td>Model</td><td>Score bands</td><td>Challenge from 0.35, block from 0.80</td><td>Challenge from 0.40, block from 0.80</td></tr>
+</table>
+<p>A velocity burst whose model score is already at or above 0.80 stays blocked in v2. The rule change does not silently allow it.</p>
+
+<h1>10. v1 against v2, and why it is NO-GO</h1>
+<p>Credit v2 loosens the bureau cutoff from 600 to 580 and the DTI cutoff from 50% to 55%, and tightens the thin-file score bands. Fraud v2 turns a 1-hour velocity burst into a challenge instead of a block, and raises the model challenge cutoff from 0.35 to 0.40.</p>
+<table>
+  <tr><th>Credit</th><th class="num">v1</th><th class="num">v2</th></tr>
+  <tr><td>Approval rate</td><td class="num">40.81%</td><td class="num">39.94%</td></tr>
+  <tr><td>Refer rate</td><td class="num">19.23%</td><td class="num">21.01%</td></tr>
+  <tr><td>Decline rate</td><td class="num">39.96%</td><td class="num">39.05%</td></tr>
+  <tr><td>Expected bad rate of approvals</td><td class="num">0.0442</td><td class="num">0.0446</td></tr>
+  <tr><td>Observed bad rate of approvals</td><td class="num">0.0580</td><td class="num">0.0587</td></tr>
+  <tr><td>Labelled approvals</td><td class="num">10,727</td><td class="num">10,485</td></tr>
+  <tr><td>Expected loss (rupees)</td><td class="num">5,21,91,011</td><td class="num">5,17,33,947</td></tr>
+  <tr><td>Refers</td><td class="num">9,493</td><td class="num">10,370</td></tr>
+</table>
+<p>Referral volume rises by 877. Expected loss uses model PD × 0.45 × approved limit. The 0.45 is a planning assumption for loss given default. It is not an observed loss. Expected loss falls 0.9%.</p>
+<p>Swap matrix. Rows are v1, columns are v2.</p>
+<table>
+  <tr><th>v1 \ v2</th><th class="num">APPROVE</th><th class="num">REFER</th><th class="num">DECLINE</th></tr>
+  <tr><td>APPROVE</td><td class="num">19,398</td><td class="num">747</td><td class="num">0</td></tr>
+  <tr><td>REFER</td><td class="num">0</td><td class="num">9,273</td><td class="num">220</td></tr>
+  <tr><td>DECLINE</td><td class="num">321</td><td class="num">350</td><td class="num">19,057</td></tr>
+</table>
+<table>
+  <tr><th>Cause</th><th class="num">Into approve</th><th class="num">Out of approve</th><th>What to say</th></tr>
+  <tr><td>DTI 50% to 55%</td><td class="num">321</td><td class="num">0</td><td>Every new approval. Also 350 declines become refers.</td></tr>
+  <tr><td>Thin-file band tightened</td><td class="num">0</td><td class="num">747</td><td>747 approves become refers. 220 refers become declines. This is why the approval rate falls.</td></tr>
+  <tr><td>Bureau 600 to 580</td><td class="num">0</td><td class="num">0</td><td>Reason codes change. Nobody is newly approved.</td></tr>
+</table>
+<p>Swap-ins are the 321 who were decline or refer under v1 and approve under v2. Their average model PD is 0.0547. Of them, 170 have a historical good or bad label, because the old booker allowed DTI up to 60%, so a DTI between 50% and 55% could already have been booked. Observed bad rate on those 170: <strong>8.24%</strong> (14 bads). Champion approvals: <strong>5.80%</strong> on 10,727 labelled approvals. 8.24 / 5.80 is about 1.42, and the gate is 1.25.</p>
+<p>Bureau scores 580–599 are 732 applications. v1 already declines 716 of them on the bureau rule. Their mean model PD is 0.724 and the lowest is 0.178, both above the 0.15 decline cutoff. In v2, 59 of them have no remaining hard-rule decline and are still declined by the model alone. Loosening the bureau cutoff rewrites the decline reason. It does not create approvals.</p>
+<p>Swap-outs, the 747 who leave approve, have a lower average PD (0.0394) and an observed bad rate of 5.10% on 412 labelled rows.</p>
+
+<h2>The gates, in the order the code applies them</h2>
+<ul>
+  <li>If fewer than 50 swap-ins have a historical label, credit is NO-GO. Here there are 170, so this gate passes.</li>
+  <li>If the observed swap-in bad rate is more than 1.25 times the champion approval bad rate, credit is NO-GO. This is the gate that fires.</li>
+  <li>If expected loss rises more than 10% and the observed swap-in bad rate is also worse, credit is NO-GO. Loss fell, so this gate does not fire.</li>
+  <li>If fraud caught falls by more than 2 percentage points, fraud is NO-GO.</li>
+  <li>If the drop is inside 2 points and genuine blocks fall, fraud is CONDITIONAL GO.</li>
+  <li>If either side is NO-GO, the overall call is NO-GO.</li>
+  <li>If the golden tests fail, the overall call is forced to NO-GO.</li>
+</ul>
+<div class="warn">
+  <strong>Overall NO-GO.</strong> Credit v2 is NO-GO. Fraud v2 is CONDITIONAL GO. Business, risk, and IT sign-off in the report are still pending. You are recommending that they do not ship the credit challenger. You are not claiming the signature has already happened.
+</div>
+
+<h2>Fraud comparison</h2>
+<table>
+  <tr><th>Metric</th><th class="num">fraud_v1</th><th class="num">fraud_v2</th></tr>
+  <tr><td>Alert rate</td><td class="num">0.0755</td><td class="num">0.0575</td></tr>
+  <tr><td>Fraud caught</td><td class="num">0.8736</td><td class="num">0.8567</td></tr>
+  <tr><td>Fraud value caught</td><td class="num">2,72,72,770</td><td class="num">2,72,13,247</td></tr>
+  <tr><td>Fraud value blocked</td><td class="num">2,69,20,770</td><td class="num">2,69,20,770</td></tr>
+  <tr><td>False positives</td><td class="num">35,438</td><td class="num">26,542</td></tr>
+  <tr><td>Genuine transactions blocked</td><td class="num">2,410</td><td class="num">2,311</td></tr>
+  <tr><td>Genuine transactions challenged</td><td class="num">33,028</td><td class="num">24,231</td></tr>
+  <tr><td>Grocery bursts blocked</td><td class="num">82</td><td class="num">3</td></tr>
+  <tr><td>Grocery bursts challenged</td><td class="num">1</td><td class="num">80</td></tr>
+  <tr><td>Genuine grocery with 3+ txns in 1 hour, blocked</td><td class="num">89</td><td class="num">2</td></tr>
+  <tr><td>Those velocity rows challenged</td><td class="num">0</td><td class="num">87</td></tr>
+</table>
+<p>Fraud caught falls by 1.69 percentage points, inside the 2-point gate. Genuine blocks fall. Fraud value blocked does not change. The drop in fraud value caught is the same size as the drop in fraud value challenged, which is the model cutoff moving from 0.35 to 0.40. The condition for a go is that a CHALLENGE on a velocity burst is an acceptable customer step.</p>
+
+<h2>Risks to say before they are asked</h2>
+<ul>
+  <li>Reject inference. The credit model only saw booked loans.</li>
+  <li>Outcome maturity. Goods need 12 months. Applications after 1 Oct 2025 are scored, not used to fit the saved model.</li>
+  <li>Loss given default is assumed at 0.45. It is not estimated from these files.</li>
+  <li>The labelled swap-ins are DTI moves. Bureau scores 580–599 do not become approvals.</li>
+  <li>A grocery burst is a planted pattern. It is not a column on the mart.</li>
+  <li>The fraud rules match patterns the generator planted. Stealth and the genuine bursts are the reason that is not a perfect score.</li>
+</ul>
+
+<h1>11. Golden tests and the demo</h1>
+<p><code>tests/test_golden.py</code> locks about 30 boundary cases to a written decision. The score is fixed, so a retrain of the live model does not move these cases. A real policy change has to update <code>tests/golden/cases.json</code> and list the difference in <code>expected_changes.json</code>. An unlisted difference fails. <code>python -m src.validation</code> runs these tests and writes the report. The last run passed: 4 passed.</p>
+<p>The Streamlit app has six tabs: Overview, Data quality, Credit decisions, Fraud, Strategy change, and Try it. Try it scores one application with the live engine. The app reads <code>app/data</code> and the copied models in <code>app/models</code>. After a model or strategy change, rebuild that snapshot with <code>python -m src.demo.export</code>.</p>
+
+<h2>Commands, in pipeline order</h2>
+<table>
+  <tr><th>Step</th><th>Command</th></tr>
+  <tr><td>Generate</td><td><code>python -m src.data_gen</code></td></tr>
+  <tr><td>Load</td><td><code>python -m src.warehouse</code></td></tr>
+  <tr><td>Transform</td><td><code>dbt build --project-dir dbt --profiles-dir dbt</code></td></tr>
+  <tr><td>Train</td><td><code>python -m src.models</code></td></tr>
+  <tr><td>Score one row</td><td><code>python -m src.decision_engine --strategy credit_v1 --example</code></td></tr>
+  <tr><td>Compare</td><td><code>python -m src.validation</code></td></tr>
+  <tr><td>Demo</td><td><code>streamlit run app/streamlit_app.py</code></td></tr>
+</table>
+
+<h1>12. Questions to be able to answer</h1>
+<h3>Why is the recommendation NO-GO if expected loss went down?</h3>
+<p>The credit gate is the observed bad rate of the people v2 newly approves. That rate is 8.24% on 170 labelled swap-ins, more than 1.25 times the 5.80% on champion approvals. Expected loss uses model PD times an assumed 45% loss given default times the limit. It fell 0.9%, from about 5.22 crore to 5.17 crore, because v2 also pulled 747 thin-file approvals back to refer. A planning-assumption loss that ticks down does not cancel a worse observed default rate on the new approvals.</p>
+<h3>You loosened the bureau cutoff. Why did almost nobody get approved because of that?</h3>
+<p>Scores from 580 to 599 are 732 applications. Their mean model PD is 0.72 and the lowest is still above 0.15, so the score band still declines them. The 321 new approvals are all the DTI move, from above 50% to at or below 55%.</p>
+<h3>What is reject inference here?</h3>
+<p>The credit model is fit only on booked loans with a known good or bad flag. People the old policy declined have no observed outcome. Scoring them is an extrapolation. Hard rules still run first.</p>
+<h3>Why is the old credit test bad rate 20% and the saved model’s about 7%?</h3>
+<p>A loan can be called bad from month 3 and good only after month 12. The newest “known” rows are mostly early defaults. The saved model keeps applications dated on or before 1 October 2025, then splits out-of-time inside that matured cohort. Train bad rate 7.61%, test 7.16%, AUC 0.706.</p>
+<h3>Why is the fraud rate higher in the model test window?</h3>
+<p>Legitimate spend covers all 90 days. Fraud is planted only from 12 August 2026. The oldest 80% includes that quiet stretch, so the train fraud rate is 0.40%. The newest 20% sits inside the planted window, so the test fraud rate is 0.89%.</p>
+<h3>Why must fraud features ignore the current transaction?</h3>
+<p>If the current purchase is inside its own 30-day average, one huge ticket pulls the average up and a 10-times spike looks milder. The window ends 1 millisecond before the current timestamp.</p>
+<h3>What has to be true for fraud v2 to be allowed?</h3>
+<p>Fraud caught falls from 87.36% to 85.67%, inside 2 points, and genuine blocks fall from 2,410 to 2,311. Grocery bursts move from block to challenge. The condition is that a challenge, rather than a silent allow, is an acceptable step for a velocity burst. A burst the model already scores at 0.80 or above stays blocked.</p>
+<h3>What fails the ship even if both policies look fine?</h3>
+<p>The golden tests. If they fail, the overall recommendation is forced to NO-GO. They pin boundary cases to a fixed score so a retrain cannot quietly move a policy line.</p>
+
+<h1>13. How to spend the remaining days</h1>
+<ol>
+  <li><strong>Story and files.</strong> Sections 1 to 5. Be able to name the five CSVs, the two join keys, and the blank 90-day flag.</li>
+  <li><strong>Policies and features.</strong> Sections 6 and 7. Say the historical cutoffs and the YAML cutoffs as two different lists.</li>
+  <li><strong>Models.</strong> Section 8. Reject inference, the maturity cutoff, and why the fraud test rate is higher.</li>
+  <li><strong>Engine.</strong> Section 9. Credit order, then the fraud “harsher vote wins” rule. Run the example command once.</li>
+  <li><strong>The recommendation.</strong> Section 10, out loud, then open the Streamlit Strategy change tab and walk the same numbers. End on the NO-GO sentence on the cover.</li>
+</ol>
+<p class="muted">This brief matches the code and the exported snapshot in the project as reviewed. If you regenerate the book or retrain the models, quote the new report rather than these figures.</p>
+
+</body>
+</html>

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Credit strategy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "effective_date",
+    "owner",
+    "description",
+    "kind",
+    "model_version",
+    "data_checks",
+    "policy_rules",
+    "score_bands",
+    "risk_bands",
+    "limit_rules"
+  ],
+  "properties": {
+    "version": {"type": "string", "minLength": 1},
+    "effective_date": {"type": "string", "format": "date"},
+    "owner": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "kind": {"const": "credit"},
+    "model_version": {"type": "string", "minLength": 1},
+    "data_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/data_check"}
+    },
+    "policy_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/policy_rule"}
+    },
+    "score_bands": {"$ref": "#/$defs/score_bands"},
+    "risk_bands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/risk_band"}
+    },
+    "limit_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/limit_rule"}
+    }
+  },
+  "$defs": {
+    "data_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "decision", "reason"],
+      "properties": {
+        "field": {"type": "string", "minLength": 1},
+        "decision": {"const": "REFER"},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "policy_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "op", "value", "decision", "reason"],
+      "properties": {
+        "field": {"type": "string", "minLength": 1},
+        "op": {"enum": ["lt", "lte", "gt", "gte", "eq"]},
+        "value": {"type": "number"},
+        "decision": {"const": "DECLINE"},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "thin_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "op", "value", "approve_max_pd", "refer_max_pd"],
+      "properties": {
+        "field": {"type": "string", "minLength": 1},
+        "op": {"enum": ["lt", "lte", "gt", "gte", "eq"]},
+        "value": {"type": "number"},
+        "approve_max_pd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "refer_max_pd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+      }
+    },
+    "score_bands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approve_max_pd", "refer_max_pd", "thin_file"],
+      "properties": {
+        "approve_max_pd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "refer_max_pd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "thin_file": {"$ref": "#/$defs/thin_file"}
+      }
+    },
+    "risk_band": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "max_score"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "max_score": {"type": "number"}
+      }
+    },
+    "limit_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk_band", "income_fraction", "cap"],
+      "properties": {
+        "risk_band": {"type": "string", "minLength": 1},
+        "income_fraction": {"type": "number", "exclusiveMinimum": 0, "maximum": 2},
+        "cap": {"type": "number", "exclusiveMinimum": 0}
+      }
+    }
+  }
+}

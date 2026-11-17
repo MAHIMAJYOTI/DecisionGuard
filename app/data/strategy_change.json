@@ -1,0 +1,222 @@
+{
+  "recommendation": {
+    "credit": "NO-GO",
+    "fraud": "CONDITIONAL GO",
+    "overall": "NO-GO",
+    "reasons": [
+      "Credit v2 is NO-GO: observed swap-in bad rate 0.0824 is more than 1.25 times the champion approval observed bad rate 0.0580.",
+      "Expected loss moves -0.9% (52,191,011 to 51,733,947 rupees). LGD is the 0.45 planning assumption, not an observed loss.",
+      "Fraud v2 is CONDITIONAL GO: fraud caught changes by -0.0169, inside 2 percentage points, and genuine blocks fall from 2,410 to 2,311. The condition is that a CHALLENGE on a velocity burst is an acceptable customer step."
+    ]
+  },
+  "credit": {
+    "n_applications": 49366,
+    "lgd": 0.45,
+    "lgd_meaning": "assumed share of the approved limit lost if the loan reaches 90+ DPD",
+    "swap_matrix": [
+      {
+        "v1_decision": "APPROVE",
+        "APPROVE": 19398,
+        "REFER": 747,
+        "DECLINE": 0
+      },
+      {
+        "v1_decision": "REFER",
+        "APPROVE": 0,
+        "REFER": 9273,
+        "DECLINE": 220
+      },
+      {
+        "v1_decision": "DECLINE",
+        "APPROVE": 321,
+        "REFER": 350,
+        "DECLINE": 19057
+      }
+    ],
+    "swap_ins": {
+      "label": "model PD on swap-ins",
+      "count": 321,
+      "average_model_pd": 0.05473841490254779,
+      "expected_bad_rate": 0.05473841490254779,
+      "expected_bad_rate_on_observed_rows": 0.0550248135488813,
+      "observed_bad_rate": 0.08235294117647059,
+      "n_with_historical_outcome": 170,
+      "observed_bad_count": 14,
+      "expected_bad_count_on_observed_rows": 9.354218303309821,
+      "numbers": {
+        "average_model_pd": "model-expected",
+        "expected_bad_rate": "model-expected (same figure as average PD)",
+        "expected_bad_rate_on_observed_rows": "model-expected, restricted to rows with a historical label",
+        "observed_bad_rate": "observed on the historical book"
+      }
+    },
+    "swap_outs": {
+      "label": "model PD on swap-outs",
+      "count": 747,
+      "average_model_pd": 0.03940656984730843,
+      "expected_bad_rate": 0.03940656984730843,
+      "expected_bad_rate_on_observed_rows": 0.03918831875441596,
+      "observed_bad_rate": 0.050970873786407765,
+      "n_with_historical_outcome": 412,
+      "observed_bad_count": 21,
+      "expected_bad_count_on_observed_rows": 16.145587326819374,
+      "numbers": {
+        "average_model_pd": "model-expected",
+        "expected_bad_rate": "model-expected (same figure as average PD)",
+        "expected_bad_rate_on_observed_rows": "model-expected, restricted to rows with a historical label",
+        "observed_bad_rate": "observed on the historical book"
+      }
+    },
+    "versions": {
+      "credit_v1": {
+        "approve_count": 20145,
+        "refer_count": 9493,
+        "decline_count": 19728,
+        "approve_rate": 0.408074383178706,
+        "refer_rate": 0.1922983429891018,
+        "decline_rate": 0.3996272738321922,
+        "expected_bad_rate_of_approvals": 0.044208951026525854,
+        "observed_bad_rate_of_approvals": 0.05798452503029738,
+        "n_approvals_with_historical_outcome": 10727,
+        "expected_loss": 52191011.0765606,
+        "expected_loss_note": "sum of model PD x LGD x approved limit, in rupees"
+      },
+      "credit_v2": {
+        "approve_count": 19719,
+        "refer_count": 10370,
+        "decline_count": 19277,
+        "approve_rate": 0.3994449621196775,
+        "refer_rate": 0.2100636065308107,
+        "decline_rate": 0.3904914313495118,
+        "expected_bad_rate_of_approvals": 0.04456228216122227,
+        "observed_bad_rate_of_approvals": 0.058655221745350504,
+        "n_approvals_with_historical_outcome": 10485,
+        "expected_loss": 51733947.113650545,
+        "expected_loss_note": "sum of model PD x LGD x approved limit, in rupees"
+      }
+    },
+    "swap_causes": [
+      {
+        "cause": "bureau_cutoff_600_to_580",
+        "APPROVE_to_REFER": 0,
+        "APPROVE_to_DECLINE": 0,
+        "REFER_to_APPROVE": 0,
+        "REFER_to_DECLINE": 0,
+        "DECLINE_to_APPROVE": 0,
+        "DECLINE_to_REFER": 0,
+        "swap_ins": 0,
+        "swap_outs": 0
+      },
+      {
+        "cause": "dti_cutoff_50_to_55",
+        "APPROVE_to_REFER": 0,
+        "APPROVE_to_DECLINE": 0,
+        "REFER_to_APPROVE": 0,
+        "REFER_to_DECLINE": 0,
+        "DECLINE_to_APPROVE": 321,
+        "DECLINE_to_REFER": 350,
+        "swap_ins": 321,
+        "swap_outs": 0
+      },
+      {
+        "cause": "bureau_cutoff_and_dti_cutoff",
+        "APPROVE_to_REFER": 0,
+        "APPROVE_to_DECLINE": 0,
+        "REFER_to_APPROVE": 0,
+        "REFER_to_DECLINE": 0,
+        "DECLINE_to_APPROVE": 0,
+        "DECLINE_to_REFER": 0,
+        "swap_ins": 0,
+        "swap_outs": 0
+      },
+      {
+        "cause": "thin_file_score_band",
+        "APPROVE_to_REFER": 747,
+        "APPROVE_to_DECLINE": 0,
+        "REFER_to_APPROVE": 0,
+        "REFER_to_DECLINE": 220,
+        "DECLINE_to_APPROVE": 0,
+        "DECLINE_to_REFER": 0,
+        "swap_ins": 0,
+        "swap_outs": 747
+      },
+      {
+        "cause": "other_reason_change",
+        "APPROVE_to_REFER": 0,
+        "APPROVE_to_DECLINE": 0,
+        "REFER_to_APPROVE": 0,
+        "REFER_to_DECLINE": 0,
+        "DECLINE_to_APPROVE": 0,
+        "DECLINE_to_REFER": 0,
+        "swap_ins": 0,
+        "swap_outs": 0
+      }
+    ],
+    "referral_change": 877,
+    "bureau_580_to_599": {
+      "rows": 732,
+      "v1_bureau_declines": 716,
+      "decision_changes": 0,
+      "mean_model_pd": 0.7241539653301746,
+      "min_model_pd": 0.17750698183858585,
+      "declined_by_model_only_in_v2": 59
+    }
+  },
+  "fraud": {
+    "n_transactions": 498461,
+    "versions": {
+      "fraud_v1": {
+        "alert_rate": 0.07546227287591206,
+        "fraud_caught_rate": 0.8735955056179775,
+        "fraud_value_caught": 27272769.64,
+        "fraud_value_blocked": 26920769.86,
+        "fraud_value_challenged": 351999.78,
+        "false_positives": 35438,
+        "genuine_transactions_blocked": 2410,
+        "genuine_transactions_challenged": 33028,
+        "genuine_customers_blocked": 2147,
+        "genuine_customers_challenged": 16500,
+        "grocery_burst_transactions": 200,
+        "grocery_burst_blocked": 82,
+        "grocery_burst_challenged": 1,
+        "grocery_burst_allowed": 117,
+        "genuine_grocery_velocity_rows": 89,
+        "genuine_grocery_velocity_blocked": 89,
+        "genuine_grocery_velocity_challenged": 0
+      },
+      "fraud_v2": {
+        "alert_rate": 0.05753108066629084,
+        "fraud_caught_rate": 0.8567415730337079,
+        "fraud_value_caught": 27213246.63,
+        "fraud_value_blocked": 26920769.86,
+        "fraud_value_challenged": 292476.77,
+        "false_positives": 26542,
+        "genuine_transactions_blocked": 2311,
+        "genuine_transactions_challenged": 24231,
+        "genuine_customers_blocked": 2107,
+        "genuine_customers_challenged": 14482,
+        "grocery_burst_transactions": 200,
+        "grocery_burst_blocked": 3,
+        "grocery_burst_challenged": 80,
+        "grocery_burst_allowed": 117,
+        "genuine_grocery_velocity_rows": 89,
+        "genuine_grocery_velocity_blocked": 2,
+        "genuine_grocery_velocity_challenged": 87
+      }
+    },
+    "fraud_rate_shift": {
+      "train_rows": 398768,
+      "test_rows": 99693,
+      "train_fraud_rate": 0.00401988123420134,
+      "test_fraud_rate": 0.008917376345380318,
+      "train_end": "2026-09-13 06:13:07",
+      "test_start": "2026-09-13 06:13:18",
+      "fraud_start_day": "2026-08-12",
+      "rows_before_fraud_window": 220626,
+      "frauds_before_fraud_window": 0,
+      "rows_in_fraud_window": 277835,
+      "frauds_in_fraud_window": 2492,
+      "fraud_rate_in_fraud_window": 0.008969352313423435
+    }
+  }
+}

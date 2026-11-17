@@ -1,0 +1,15 @@
+# Local DuckDB profile. BigQuery would be a different output with the same
+# model SQL, apart from the window syntax called out in the fraud model.
+#
+# DECISIONGUARD_DUCKDB is the full path of the database file, for example
+# C:\Users\me\dataanalytics\data\warehouse.duckdb
+# One thread: DuckDB allows one writer to the file.
+
+decisionguard:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DECISIONGUARD_DUCKDB') }}"
+      schema: main
+      threads: 1

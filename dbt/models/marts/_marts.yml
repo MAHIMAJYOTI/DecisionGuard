@@ -1,0 +1,198 @@
+version: 2
+
+models:
+  - name: mart_credit_applications
+    description: >
+      Decisioning table. One row per clean application, with credit features
+      and the 12-month outcome. A null dpd90 flag means the outcome is not
+      known yet, or the loan was never booked. outcome_status says which.
+    columns:
+      - name: application_id
+        description: Application identifier.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_loan_applications')
+              field: application_id
+      - name: customer_id
+        description: Applicant.
+        data_tests:
+          - not_null
+      - name: product
+        description: personal loan or credit card.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['personal loan', 'credit card']
+      - name: requested_amount
+        description: Requested amount in Indian rupees.
+        data_tests:
+          - positive_amount
+      - name: tenure_months
+        description: Term in months. Zero means a credit card.
+      - name: application_ts
+        description: When the application arrived.
+        data_tests:
+          - not_null
+          - not_after_as_of
+      - name: channel
+        description: branch, web, or app.
+      - name: age
+        description: Applicant age. Null when that customer was rejected in staging.
+      - name: income
+        description: Annual income in Indian rupees.
+      - name: income_band
+        description: Income group used for reporting.
+      - name: employment_type
+        description: Employment.
+      - name: city
+        description: City.
+      - name: existing_debt
+        description: Outstanding debt in Indian rupees.
+      - name: months_at_address
+        description: Months at the current address.
+      - name: bureau_score
+        description: Bureau score. Null when there is no clean bureau row.
+      - name: bureau_risk_band
+        description: high, medium, low, or very_low.
+      - name: num_enquiries_6m
+        description: Enquiries in the last 6 months.
+      - name: num_delinquencies_24m
+        description: Delinquencies in the last 24 months.
+      - name: total_credit_limit
+        description: Total existing credit limit in Indian rupees.
+      - name: utilisation
+        description: Balance divided by limit.
+      - name: debt_to_income
+        description: Monthly obligations divided by monthly income. 99 means income is zero.
+      - name: was_booked
+        description: 1 if a clean performance row exists for this application, otherwise 0.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: disbursed_amount
+        description: Amount disbursed, in Indian rupees. Null when the application was not booked.
+      - name: disbursement_ts
+        description: When the money was disbursed. Null when the application was not booked.
+      - name: months_on_book
+        description: Whole months since disbursement. Null when the application was not booked.
+      - name: max_dpd_12m
+        description: Worst days past due. Null when the application was not booked.
+      - name: dpd90_within_12m
+        description: 1 bad, 0 good, null when the outcome is not known yet or the loan was not booked.
+        data_tests:
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: outcome_status
+        description: not_booked, not_yet_known, good, or bad.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['not_booked', 'not_yet_known', 'good', 'bad']
+
+  - name: mart_fraud_transactions
+    description: One clean card transaction with point-in-time fraud features and the fraud label.
+    columns:
+      - name: txn_id
+        description: Transaction identifier.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_transactions')
+              field: txn_id
+      - name: customer_id
+        description: Cardholder.
+        data_tests:
+          - not_null
+      - name: amount
+        description: Amount in Indian rupees.
+        data_tests:
+          - positive_amount
+      - name: merchant_category
+        description: Merchant category.
+      - name: country
+        description: ISO country code.
+      - name: device_id
+        description: Device that sent the transaction.
+      - name: txn_ts
+        description: Transaction timestamp.
+        data_tests:
+          - not_after_as_of
+      - name: is_fraud
+        description: 1 if fraud, 0 if genuine.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: txn_count_1h
+        description: Earlier transactions for this customer in the previous hour.
+      - name: txn_amount_1h
+        description: Sum of those earlier amounts.
+      - name: txn_count_24h
+        description: Earlier transactions for this customer in the previous 24 hours.
+      - name: txn_amount_24h
+        description: Sum of those earlier amounts.
+      - name: avg_amount_30d
+        description: Average of earlier amounts in the previous 30 days.
+      - name: amount_vs_avg_30d
+        description: This amount divided by the 30-day average.
+      - name: is_new_device
+        description: 1 on the first transaction seen for this device and customer.
+      - name: is_foreign_country
+        description: 1 when the country is not India.
+      - name: is_night
+        description: 1 from midnight up to but not including 05:00.
+
+  - name: mart_portfolio_summary
+    description: Daily and monthly application, booking, and fraud totals.
+    columns:
+      - name: period_grain
+        description: day or month.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['day', 'month']
+      - name: period_start
+        description: First date of the day or month.
+        data_tests:
+          - not_null
+      - name: application_count
+        description: Applications with application_ts in the period. Null when the period has card spend only.
+      - name: booked_count
+        description: Applications in the period that have a clean performance row.
+      - name: booking_rate
+        description: booked_count divided by application_count.
+      - name: requested_amount
+        description: Sum of requested amounts in the period, in Indian rupees.
+      - name: disbursed_amount
+        description: Sum of disbursed amounts for applications in the period, in Indian rupees.
+      - name: transaction_count
+        description: Clean card transactions in the period. Null when the period has applications only.
+      - name: fraud_count
+        description: Transactions in the period with is_fraud = 1.
+      - name: fraud_rate
+        description: fraud_count divided by transaction_count.
+      - name: transaction_amount
+        description: Sum of transaction amounts in the period, in Indian rupees.
+
+  - name: mart_data_quality
+    description: Rejected-row counts by source table and reason.
+    columns:
+      - name: table_name
+        description: Raw table the rejects belong to.
+        data_tests:
+          - not_null
+      - name: reject_reason
+        description: Reason name. Matches manifest.json.
+        data_tests:
+          - not_null
+      - name: rejected_rows
+        description: How many reject-reason rows were produced. A raw row with two reasons is counted twice.
+        data_tests:
+          - not_null

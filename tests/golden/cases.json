@@ -1,0 +1,326 @@
+[
+  {
+    "id": "credit_age_20",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-AGE20", "age": 20, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["AGE_BELOW_21"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["AGE_BELOW_21"]}
+    }
+  },
+  {
+    "id": "credit_age_21",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-AGE21", "age": 21, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_bureau_599",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-B599", "age": 35, "income": 600000, "bureau_score": 599, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["BUREAU_SCORE_BELOW_600"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_bureau_580",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-B580", "age": 35, "income": 600000, "bureau_score": 580, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["BUREAU_SCORE_BELOW_600"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_bureau_579",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-B579", "age": 35, "income": 600000, "bureau_score": 579, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["BUREAU_SCORE_BELOW_600"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["BUREAU_SCORE_BELOW_580"]}
+    }
+  },
+  {
+    "id": "credit_bureau_600",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-B600", "age": 35, "income": 600000, "bureau_score": 600, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_dti_050",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-DTI50", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.50, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_dti_051",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-DTI51", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.51, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["DTI_ABOVE_50"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_dti_055",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-DTI55", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.55, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["DTI_ABOVE_50"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_dti_056",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-DTI56", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.56, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["DTI_ABOVE_50"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["DTI_ABOVE_55"]}
+    }
+  },
+  {
+    "id": "credit_delinq_2",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-DQ2", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 2, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_delinq_3",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-DQ3", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 3, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["DELINQUENCIES_24M_AT_LEAST_3"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["DELINQUENCIES_24M_AT_LEAST_3"]}
+    }
+  },
+  {
+    "id": "credit_income_180000",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-INC180", "age": 35, "income": 180000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_income_179999",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-INC179", "age": 35, "income": 179999, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["INCOME_BELOW_1_8_LAKH"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["INCOME_BELOW_1_8_LAKH"]}
+    }
+  },
+  {
+    "id": "credit_missing_income",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-MISSINC", "age": 35, "income": null, "bureau_score": 400, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "REFER", "reason_codes": ["MISSING_INCOME"]},
+      "credit_v2": {"decision": "REFER", "reason_codes": ["MISSING_INCOME"]}
+    }
+  },
+  {
+    "id": "credit_missing_bureau",
+    "model_pd": 0.01,
+    "record": {"application_id": "G-MISSBUR", "age": 35, "income": 600000, "bureau_score": null, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "REFER", "reason_codes": ["MISSING_BUREAU"]},
+      "credit_v2": {"decision": "REFER", "reason_codes": ["MISSING_BUREAU"]}
+    }
+  },
+  {
+    "id": "credit_thin_pd_002",
+    "model_pd": 0.02,
+    "record": {"application_id": "G-THIN02", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 0, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["THIN_FILE", "SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["THIN_FILE", "SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_thin_pd_004",
+    "model_pd": 0.04,
+    "record": {"application_id": "G-THIN04", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 0, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["THIN_FILE", "SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "REFER", "reason_codes": ["THIN_FILE", "SCORE_WITHIN_REFER_BAND"]}
+    }
+  },
+  {
+    "id": "credit_thin_pd_009",
+    "model_pd": 0.09,
+    "record": {"application_id": "G-THIN09", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 0, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "REFER", "reason_codes": ["THIN_FILE", "SCORE_WITHIN_REFER_BAND"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["THIN_FILE", "MODEL_PD_ABOVE_DECLINE_CUTOFF"]}
+    }
+  },
+  {
+    "id": "credit_pd_008",
+    "model_pd": 0.08,
+    "record": {"application_id": "G-PD08", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]},
+      "credit_v2": {"decision": "APPROVE", "reason_codes": ["SCORE_WITHIN_APPROVE_BAND"]}
+    }
+  },
+  {
+    "id": "credit_pd_009",
+    "model_pd": 0.09,
+    "record": {"application_id": "G-PD09", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "REFER", "reason_codes": ["SCORE_WITHIN_REFER_BAND"]},
+      "credit_v2": {"decision": "REFER", "reason_codes": ["SCORE_WITHIN_REFER_BAND"]}
+    }
+  },
+  {
+    "id": "credit_pd_016",
+    "model_pd": 0.16,
+    "record": {"application_id": "G-PD16", "age": 35, "income": 600000, "bureau_score": 720, "debt_to_income": 0.30, "num_delinquencies_24m": 0, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["MODEL_PD_ABOVE_DECLINE_CUTOFF"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["MODEL_PD_ABOVE_DECLINE_CUTOFF"]}
+    }
+  },
+  {
+    "id": "credit_stacked_rules",
+    "model_pd": 0.04,
+    "record": {"application_id": "G-STACK", "age": 20, "income": 600000, "bureau_score": 720, "debt_to_income": 0.62, "num_delinquencies_24m": 4, "num_enquiries_6m": 1, "utilisation": 0.40, "total_credit_limit": 200000, "requested_amount": 100000},
+    "expect": {
+      "credit_v1": {"decision": "DECLINE", "reason_codes": ["AGE_BELOW_21", "DTI_ABOVE_50", "DELINQUENCIES_24M_AT_LEAST_3"]},
+      "credit_v2": {"decision": "DECLINE", "reason_codes": ["AGE_BELOW_21", "DTI_ABOVE_55", "DELINQUENCIES_24M_AT_LEAST_3"]}
+    }
+  },
+  {
+    "id": "fraud_velocity_2",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-VEL2", "customer_id": "C1", "amount": 400, "merchant_category": "grocery", "txn_ts": "2026-09-01 12:00:00", "txn_count_1h": 2, "txn_amount_1h": 800, "txn_count_24h": 2, "txn_amount_24h": 800, "avg_amount_30d": 400, "amount_vs_avg_30d": 1.0, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_velocity_3",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-VEL3", "customer_id": "C1", "amount": 400, "merchant_category": "grocery", "txn_ts": "2026-09-01 12:12:00", "txn_count_1h": 3, "txn_amount_1h": 1200, "txn_count_24h": 3, "txn_amount_24h": 1200, "avg_amount_30d": 400, "amount_vs_avg_30d": 1.0, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "BLOCK", "reason_codes": ["VELOCITY_1H", "MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "CHALLENGE", "reason_codes": ["VELOCITY_1H", "MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_velocity_and_high_score",
+    "model_pd": 0.90,
+    "record": {"txn_id": "G-VELHI", "customer_id": "C1", "amount": 400, "merchant_category": "grocery", "txn_ts": "2026-09-01 12:16:00", "txn_count_1h": 4, "txn_amount_1h": 1600, "txn_count_24h": 4, "txn_amount_24h": 1600, "avg_amount_30d": 400, "amount_vs_avg_30d": 1.0, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "BLOCK", "reason_codes": ["VELOCITY_1H", "MODEL_SCORE_BLOCK"]},
+      "fraud_v2": {"decision": "BLOCK", "reason_codes": ["VELOCITY_1H", "MODEL_SCORE_BLOCK"]}
+    }
+  },
+  {
+    "id": "fraud_foreign_new_device",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-FORNEW", "customer_id": "C2", "amount": 2500, "merchant_category": "electronics", "txn_ts": "2026-09-02 15:00:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 0, "txn_amount_24h": 0, "avg_amount_30d": 900, "amount_vs_avg_30d": 2.8, "is_new_device": 1, "is_foreign_country": 1, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "BLOCK", "reason_codes": ["FOREIGN_NEW_DEVICE", "MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "BLOCK", "reason_codes": ["FOREIGN_NEW_DEVICE", "MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_foreign_known_device",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-FOROLD", "customer_id": "C2", "amount": 2500, "merchant_category": "electronics", "txn_ts": "2026-09-02 15:10:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 0, "txn_amount_24h": 0, "avg_amount_30d": 900, "amount_vs_avg_30d": 2.8, "is_new_device": 0, "is_foreign_country": 1, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_amount_ratio_5",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-AVG5", "customer_id": "C3", "amount": 2000, "merchant_category": "travel", "txn_ts": "2026-09-03 11:00:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 0, "txn_amount_24h": 0, "avg_amount_30d": 400, "amount_vs_avg_30d": 5.0, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_amount_ratio_501",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-AVG501", "customer_id": "C3", "amount": 2004, "merchant_category": "travel", "txn_ts": "2026-09-03 11:05:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 0, "txn_amount_24h": 0, "avg_amount_30d": 400, "amount_vs_avg_30d": 5.01, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "CHALLENGE", "reason_codes": ["AMOUNT_VS_AVG_ABOVE_5", "MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "CHALLENGE", "reason_codes": ["AMOUNT_VS_AVG_ABOVE_5", "MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_night_19999",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-NIGHTLO", "customer_id": "C4", "amount": 19999, "merchant_category": "electronics", "txn_ts": "2026-09-04 02:10:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 0, "txn_amount_24h": 0, "avg_amount_30d": 5000, "amount_vs_avg_30d": 4.0, "is_new_device": 0, "is_foreign_country": 0, "is_night": 1},
+    "expect": {
+      "fraud_v1": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_night_20000",
+    "model_pd": 0.01,
+    "record": {"txn_id": "G-NIGHTHI", "customer_id": "C4", "amount": 20000, "merchant_category": "electronics", "txn_ts": "2026-09-04 02:20:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 0, "txn_amount_24h": 0, "avg_amount_30d": 5000, "amount_vs_avg_30d": 4.0, "is_new_device": 0, "is_foreign_country": 0, "is_night": 1},
+    "expect": {
+      "fraud_v1": {"decision": "CHALLENGE", "reason_codes": ["NIGHT_HIGH_VALUE", "MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "CHALLENGE", "reason_codes": ["NIGHT_HIGH_VALUE", "MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_missing_amount",
+    "model_pd": 0.90,
+    "record": {"txn_id": "G-MISSAMT", "customer_id": "C5", "amount": null, "merchant_category": "grocery", "txn_ts": "2026-09-05 14:00:00", "txn_count_1h": 4, "txn_amount_1h": 1000, "txn_count_24h": 4, "txn_amount_24h": 1000, "avg_amount_30d": 400, "amount_vs_avg_30d": 1.0, "is_new_device": 1, "is_foreign_country": 1, "is_night": 1},
+    "expect": {
+      "fraud_v1": {"decision": "CHALLENGE", "reason_codes": ["MISSING_AMOUNT"]},
+      "fraud_v2": {"decision": "CHALLENGE", "reason_codes": ["MISSING_AMOUNT"]}
+    }
+  },
+  {
+    "id": "fraud_stealth_low_score",
+    "model_pd": 0.10,
+    "record": {"txn_id": "G-STEALTH", "customer_id": "C6", "amount": 850, "merchant_category": "grocery", "txn_ts": "2026-09-15 14:10:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 1, "txn_amount_24h": 850, "avg_amount_30d": 900, "amount_vs_avg_30d": 0.94, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]},
+      "fraud_v2": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_model_pd_036",
+    "model_pd": 0.36,
+    "record": {"txn_id": "G-PD36", "customer_id": "C7", "amount": 1200, "merchant_category": "fuel", "txn_ts": "2026-09-16 16:00:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 1, "txn_amount_24h": 1200, "avg_amount_30d": 700, "amount_vs_avg_30d": 1.7, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "CHALLENGE", "reason_codes": ["MODEL_SCORE_CHALLENGE"]},
+      "fraud_v2": {"decision": "ALLOW", "reason_codes": ["MODEL_SCORE_ALLOW"]}
+    }
+  },
+  {
+    "id": "fraud_model_pd_080",
+    "model_pd": 0.80,
+    "record": {"txn_id": "G-PD80", "customer_id": "C8", "amount": 3000, "merchant_category": "electronics", "txn_ts": "2026-09-17 18:00:00", "txn_count_1h": 0, "txn_amount_1h": 0, "txn_count_24h": 1, "txn_amount_24h": 3000, "avg_amount_30d": 900, "amount_vs_avg_30d": 3.3, "is_new_device": 0, "is_foreign_country": 0, "is_night": 0},
+    "expect": {
+      "fraud_v1": {"decision": "BLOCK", "reason_codes": ["MODEL_SCORE_BLOCK"]},
+      "fraud_v2": {"decision": "BLOCK", "reason_codes": ["MODEL_SCORE_BLOCK"]}
+    }
+  }
+]

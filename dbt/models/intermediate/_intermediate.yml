@@ -1,0 +1,150 @@
+version: 2
+
+models:
+  - name: int_customer_credit_features
+    description: >
+      One row per clean application. Debt-to-income is recomputed with the
+      same EMI formula as the data generator. Bureau risk band and income
+      band are reporting groups, not the credit strategy.
+    columns:
+      - name: application_id
+        description: Application identifier.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_loan_applications')
+              field: application_id
+      - name: customer_id
+        description: Applicant.
+        data_tests:
+          - not_null
+      - name: product
+        description: personal loan or credit card.
+      - name: requested_amount
+        description: Requested amount in Indian rupees.
+      - name: tenure_months
+        description: Term in months. Zero means a credit card.
+      - name: application_ts
+        description: When the application arrived.
+      - name: channel
+        description: branch, web, or app.
+      - name: age
+        description: Applicant age. Null when the customer row was rejected.
+      - name: income
+        description: Annual income in Indian rupees. Null when the customer row was rejected.
+      - name: employment_type
+        description: Employment. Null when the customer row was rejected.
+      - name: city
+        description: City. Null when the customer row was rejected.
+      - name: existing_debt
+        description: Outstanding debt in Indian rupees.
+      - name: months_at_address
+        description: Months at the current address.
+      - name: bureau_score
+        description: Bureau score. Null when the customer has no clean bureau row.
+      - name: num_enquiries_6m
+        description: Enquiries in the last 6 months.
+      - name: num_delinquencies_24m
+        description: Delinquencies in the last 24 months.
+      - name: total_credit_limit
+        description: Total existing credit limit in Indian rupees.
+      - name: utilisation
+        description: Balance divided by limit.
+      - name: bureau_risk_band
+        description: high under 600, medium under 700, low under 800, otherwise very_low.
+        data_tests:
+          - accepted_values:
+              values: ['high', 'medium', 'low', 'very_low']
+      - name: income_band
+        description: no_income, under 3 lakh, 3 to 6 lakh, 6 to 12 lakh, or over 12 lakh. A lakh is 100,000 rupees.
+        data_tests:
+          - accepted_values:
+              values: ['no_income', 'under_3_lakh', '3_to_6_lakh', '6_to_12_lakh', 'over_12_lakh']
+      - name: existing_emi
+        description: Existing debt times 0.03, the monthly-payment stand-in from the generator.
+      - name: new_monthly_obligation
+        description: Annuity payment for a personal loan, or 5 percent of the limit for a card.
+      - name: debt_to_income
+        description: (existing EMI + new obligation) / monthly income. 99 means income is zero.
+
+  - name: int_transaction_fraud_features
+    description: >
+      One row per clean card transaction. Counts, sums, and the 30-day average
+      use only earlier transactions, so the current row cannot leak into its own features.
+    columns:
+      - name: txn_id
+        description: Transaction identifier.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_transactions')
+              field: txn_id
+      - name: customer_id
+        description: Cardholder.
+        data_tests:
+          - not_null
+      - name: amount
+        description: Amount in Indian rupees.
+        data_tests:
+          - positive_amount
+      - name: merchant_category
+        description: Merchant category.
+      - name: country
+        description: ISO country code.
+      - name: device_id
+        description: Device that sent the transaction.
+      - name: txn_ts
+        description: Transaction timestamp.
+        data_tests:
+          - not_null
+          - not_after_as_of
+      - name: is_fraud
+        description: 1 if fraud, 0 if genuine.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: txn_count_1h
+        description: How many earlier transactions this customer had in the previous hour.
+        data_tests:
+          - not_null
+      - name: txn_amount_1h
+        description: Sum of those earlier amounts, in Indian rupees.
+        data_tests:
+          - not_null
+      - name: txn_count_24h
+        description: How many earlier transactions this customer had in the previous 24 hours.
+        data_tests:
+          - not_null
+      - name: txn_amount_24h
+        description: Sum of those earlier amounts, in Indian rupees.
+        data_tests:
+          - not_null
+      - name: avg_amount_30d
+        description: Average amount of this customer's earlier transactions in the previous 30 days. Null when there is no earlier transaction.
+      - name: amount_vs_avg_30d
+        description: This amount divided by avg_amount_30d. Null when the average is missing or zero.
+      - name: is_new_device
+        description: 1 when this is the first time this device is seen for this customer.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: is_foreign_country
+        description: 1 when the country is not India.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: is_night
+        description: 1 when the transaction is from midnight up to but not including 05:00.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false

@@ -1,0 +1,363 @@
+version: 2
+
+models:
+  - name: prep_customers
+    description: Typed customer rows with a list of reject reasons. Not stored; dbt inlines it.
+    columns:
+      - name: _src_row
+        description: Position of the row in the raw file.
+      - name: customer_id
+        description: Person identifier, trimmed. Blank becomes null.
+      - name: age
+        description: Age as an integer. Unparseable text becomes null.
+      - name: income
+        description: Annual income in Indian rupees. Blank becomes null. Zero stays zero.
+      - name: employment_type
+        description: Employment, trimmed and lower-cased.
+      - name: city
+        description: City name, trimmed. Capital letters are kept because this is a name.
+      - name: existing_debt
+        description: Outstanding debt in Indian rupees.
+      - name: months_at_address
+        description: Months at the current address.
+      - name: reject_reasons
+        description: Problems on this row. An empty list means the row is kept. A duplicate copy carries only duplicate_customer_id.
+
+  - name: prep_credit_bureau
+    description: Typed bureau rows with a list of reject reasons. Not stored.
+    columns:
+      - name: _src_row
+        description: Position of the row in the raw file.
+      - name: customer_id
+        description: Person identifier, trimmed.
+      - name: bureau_score
+        description: Bureau score as an integer. Valid scores are 300 to 900.
+      - name: num_enquiries_6m
+        description: Enquiries in the last 6 months.
+      - name: num_delinquencies_24m
+        description: Delinquencies in the last 24 months.
+      - name: total_credit_limit
+        description: Total existing credit limit in Indian rupees.
+      - name: utilisation
+        description: Balance divided by limit.
+      - name: reject_reasons
+        description: Problems on this row. Empty means the row is kept.
+
+  - name: prep_loan_applications
+    description: Typed applications with a list of reject reasons. Not stored.
+    columns:
+      - name: _src_row
+        description: Position of the row in the raw file.
+      - name: application_id
+        description: Application identifier, trimmed.
+      - name: customer_id
+        description: Applicant, trimmed.
+      - name: product
+        description: Product exactly as trimmed. Case is not changed.
+      - name: requested_amount
+        description: Requested amount in Indian rupees.
+      - name: tenure_months
+        description: Term in months. Zero is a credit card.
+      - name: application_ts
+        description: Application timestamp. Unparseable text becomes null.
+      - name: channel
+        description: Channel, trimmed and lower-cased.
+      - name: reject_reasons
+        description: Problems on this row. Empty means the row is kept.
+
+  - name: prep_transactions
+    description: Typed card transactions with a list of reject reasons. Not stored.
+    columns:
+      - name: _src_row
+        description: Position of the row in the raw file.
+      - name: txn_id
+        description: Transaction identifier, trimmed.
+      - name: customer_id
+        description: Cardholder, trimmed.
+      - name: amount
+        description: Amount in Indian rupees.
+      - name: merchant_category
+        description: Merchant category, trimmed and lower-cased.
+      - name: country
+        description: ISO country code, trimmed and upper-cased.
+      - name: device_id
+        description: Device identifier, trimmed.
+      - name: txn_ts
+        description: Transaction timestamp. Unparseable text becomes null.
+      - name: is_fraud
+        description: 1 for fraud, 0 for genuine. Blank becomes null.
+      - name: reject_reasons
+        description: Problems on this row. Empty means the row is kept.
+
+  - name: prep_loan_performance
+    description: Typed booked-loan rows with a list of reject reasons. Not stored.
+    columns:
+      - name: _src_row
+        description: Position of the row in the raw file.
+      - name: application_id
+        description: Application identifier, trimmed.
+      - name: customer_id
+        description: Borrower, trimmed.
+      - name: disbursed_amount
+        description: Amount disbursed, in Indian rupees.
+      - name: disbursement_ts
+        description: Disbursement timestamp. Unparseable text becomes null.
+      - name: months_on_book
+        description: Whole months since disbursement.
+      - name: max_dpd_12m
+        description: Worst days past due.
+      - name: dpd90_within_12m
+        description: 1, 0, or null when the outcome is not known yet. Null is kept.
+      - name: reject_reasons
+        description: Problems on this row. Empty means the row is kept. A blank outcome flag is not a reason.
+
+  - name: stg_customers
+    description: Clean customers. One row per person. Rejected rows are in stg_rejected_records.
+    columns:
+      - name: customer_id
+        description: Person identifier.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: source('raw', 'customers')
+              field: customer_id
+      - name: age
+        description: Age in years. Kept only when it is from 18 to 100.
+        data_tests:
+          - not_null
+          - value_between:
+              min_value: 18
+              max_value: 100
+      - name: income
+        description: Annual income in Indian rupees. Zero is allowed.
+        data_tests:
+          - not_null
+      - name: employment_type
+        description: salaried, self_employed, student, retired, unemployed, or homemaker.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['salaried', 'self_employed', 'student', 'retired', 'unemployed', 'homemaker']
+      - name: city
+        description: City name.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Mumbai', 'Delhi', 'Bengaluru', 'Hyderabad', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kochi', 'Chandigarh', 'Indore', 'Coimbatore']
+      - name: existing_debt
+        description: Outstanding debt in Indian rupees. Negative values were rejected.
+        data_tests:
+          - not_null
+      - name: months_at_address
+        description: Months at the current address.
+        data_tests:
+          - not_null
+      - name: _src_row
+        description: Position of the kept row in the raw file.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_credit_bureau
+    description: Clean bureau snapshot. One row per customer who has a usable score.
+    columns:
+      - name: customer_id
+        description: Person identifier.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: source('raw', 'customers')
+              field: customer_id
+      - name: bureau_score
+        description: Bureau score from 300 to 900.
+        data_tests:
+          - not_null
+          - value_between:
+              min_value: 300
+              max_value: 900
+      - name: num_enquiries_6m
+        description: Credit enquiries in the last 6 months.
+        data_tests:
+          - not_null
+      - name: num_delinquencies_24m
+        description: Delinquencies in the last 24 months.
+        data_tests:
+          - not_null
+      - name: total_credit_limit
+        description: Total existing credit limit in Indian rupees.
+        data_tests:
+          - not_null
+      - name: utilisation
+        description: Balance divided by limit. Values from 0 to 1.20 are kept.
+        data_tests:
+          - not_null
+      - name: _src_row
+        description: Position of the kept row in the raw file.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_loan_applications
+    description: Clean applications. One row per application id.
+    columns:
+      - name: application_id
+        description: Application identifier.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Applicant. The id exists in the raw customer file.
+        data_tests:
+          - not_null
+          - relationships:
+              to: source('raw', 'customers')
+              field: customer_id
+      - name: product
+        description: personal loan or credit card.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['personal loan', 'credit card']
+      - name: requested_amount
+        description: Requested amount in Indian rupees.
+        data_tests:
+          - positive_amount
+      - name: tenure_months
+        description: Term in months. Zero means a credit card.
+        data_tests:
+          - not_null
+      - name: application_ts
+        description: When the application arrived.
+        data_tests:
+          - not_null
+          - not_after_as_of
+      - name: channel
+        description: branch, web, or app.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['branch', 'web', 'app']
+      - name: _src_row
+        description: Position of the kept row in the raw file.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_transactions
+    description: Clean card transactions. One row per transaction id.
+    columns:
+      - name: txn_id
+        description: Transaction identifier.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Cardholder. The id exists in the raw customer file.
+        data_tests:
+          - not_null
+          - relationships:
+              to: source('raw', 'customers')
+              field: customer_id
+      - name: amount
+        description: Amount in Indian rupees.
+        data_tests:
+          - positive_amount
+      - name: merchant_category
+        description: Merchant category.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['grocery', 'fuel', 'restaurant', 'ecommerce', 'travel', 'atm', 'electronics', 'utilities', 'jewellery', 'healthcare']
+      - name: country
+        description: ISO country code.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['IN', 'AE', 'TH', 'SG', 'GB', 'US', 'NG', 'RO', 'BR']
+      - name: device_id
+        description: Device that sent the transaction.
+        data_tests:
+          - not_null
+      - name: txn_ts
+        description: Transaction timestamp.
+        data_tests:
+          - not_null
+          - not_after_as_of
+      - name: is_fraud
+        description: 1 if fraud, 0 if genuine.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: _src_row
+        description: Position of the kept row in the raw file.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_loan_performance
+    description: Clean booked loans. One row per application. A blank 90-day flag means the outcome is not known yet.
+    columns:
+      - name: application_id
+        description: Booked application. The id exists in the raw application file.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: source('raw', 'loan_applications')
+              field: application_id
+      - name: customer_id
+        description: Borrower.
+        data_tests:
+          - not_null
+      - name: disbursed_amount
+        description: Amount disbursed, in Indian rupees.
+        data_tests:
+          - positive_amount
+      - name: disbursement_ts
+        description: When the money was disbursed.
+        data_tests:
+          - not_null
+          - not_after_as_of
+      - name: months_on_book
+        description: Whole months from disbursement to the as-of date.
+        data_tests:
+          - not_null
+      - name: max_dpd_12m
+        description: Worst days past due observed.
+        data_tests:
+          - not_null
+      - name: dpd90_within_12m
+        description: 1 if 90 days past due happened, 0 if 12 months passed without it, null if it is too early to say.
+        data_tests:
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: _src_row
+        description: Position of the kept row in the raw file.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_rejected_records
+    description: >
+      One row per reject reason. A raw row with two problems appears twice.
+      missing_customer rows have a null _src_row because that bureau line was deleted.
+    columns:
+      - name: table_name
+        description: Raw table the row came from. missing_customer is filed under credit_bureau.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['customers', 'credit_bureau', 'loan_applications', 'transactions', 'loan_performance']
+      - name: record_id
+        description: Business key of the rejected row (customer, application, or transaction id).
+      - name: reject_reason
+        description: Why the row was rejected. Names match manifest.json.
+        data_tests:
+          - not_null
+      - name: _src_row
+        description: Position in the raw file. Null only for customers who have no bureau row at all.

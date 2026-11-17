@@ -1,0 +1,7 @@
+{% test value_between(model, column_name, min_value, max_value) %}
+select {{ column_name }} as failing_value
+from {{ model }}
+where {{ column_name }} is null
+   or {{ column_name }} < {{ min_value }}
+   or {{ column_name }} > {{ max_value }}
+{% endtest %}

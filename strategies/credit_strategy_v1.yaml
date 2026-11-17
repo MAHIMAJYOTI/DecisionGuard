@@ -1,0 +1,104 @@
+# Champion credit policy. This is the strategy the engine runs.
+# The historical booking rules in src/data_gen/performance.py are only the
+# old process that created outcomes. They are not this policy.
+#
+# 1.8 lakh = 180,000 Indian rupees a year.
+# Comparisons are strict where the brief says "below" or "above":
+# a score of exactly 600 is allowed through, a DTI of exactly 50% is allowed through.
+
+version: credit_v1
+effective_date: "2026-10-01"
+owner: credit-policy
+description: >
+  Champion policy. Missing income or bureau data is referred to a person
+  and is never auto-approved. Hard declines cover age, bureau score, DTI,
+  delinquencies and income. Everyone else is approved, referred or declined
+  from the probability of 90+ DPD, then given a limit from risk band and income.
+kind: credit
+model_version: credit_lr_v1
+
+data_checks:
+  - field: income
+    decision: REFER
+    reason: MISSING_INCOME
+  - field: bureau_score
+    decision: REFER
+    reason: MISSING_BUREAU
+  - field: age
+    decision: REFER
+    reason: MISSING_AGE
+  - field: debt_to_income
+    decision: REFER
+    reason: MISSING_DTI
+  - field: num_delinquencies_24m
+    decision: REFER
+    reason: MISSING_DELINQUENCIES
+
+policy_rules:
+  - field: age
+    op: lt
+    value: 21
+    decision: DECLINE
+    reason: AGE_BELOW_21
+  - field: bureau_score
+    op: lt
+    value: 600
+    decision: DECLINE
+    reason: BUREAU_SCORE_BELOW_600
+  - field: debt_to_income
+    op: gt
+    value: 0.50
+    decision: DECLINE
+    reason: DTI_ABOVE_50
+  - field: num_delinquencies_24m
+    op: gte
+    value: 3
+    decision: DECLINE
+    reason: DELINQUENCIES_24M_AT_LEAST_3
+  - field: income
+    op: lt
+    value: 180000
+    decision: DECLINE
+    reason: INCOME_BELOW_1_8_LAKH
+
+# Predicted probability of 90+ DPD within 12 months.
+# At or below approve_max_pd: APPROVE. Above that and at or below
+# refer_max_pd: REFER. Above refer_max_pd: DECLINE.
+# A thin file (no existing credit limit) uses the tighter pair.
+score_bands:
+  approve_max_pd: 0.08
+  refer_max_pd: 0.15
+  thin_file:
+    field: total_credit_limit
+    op: lte
+    value: 0
+    approve_max_pd: 0.05
+    refer_max_pd: 0.10
+
+# First matching band wins, so list them from low score to high score.
+# high is under 600, medium under 700, low under 800, otherwise very_low.
+risk_bands:
+  - name: high
+    max_score: 599
+  - name: medium
+    max_score: 699
+  - name: low
+    max_score: 799
+  - name: very_low
+    max_score: 900
+
+# Sanction is the smallest of: amount asked for, income times the fraction,
+# and the cap. Only an APPROVE receives a limit.
+limit_rules:
+  - risk_band: high
+    income_fraction: 0.08
+    cap: 50000
+  - risk_band: medium
+    income_fraction: 0.15
+    cap: 200000
+  - risk_band: low
+    income_fraction: 0.30
+    cap: 500000
+  - risk_band: very_low
+    income_fraction: 0.50
+    cap: 1000000

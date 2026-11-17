@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang='en'><head><meta charset='utf-8'>
+<title>Strategy change v1 to v2</title>
+<style>
+body { font-family: Georgia, serif; max-width: 980px; margin: 2rem auto; line-height: 1.45; }
+table { border-collapse: collapse; margin: 1rem 0; }
+th, td { border: 1px solid #ccc; padding: 0.35rem 0.6rem; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+code, pre { font-family: Consolas, monospace; }
+</style></head><body>
+<h1>Strategy change: v1 to v2</h1>
+<h2>Summary</h2>
+<p>Credit v2 loosens the bureau cutoff from 600 to 580 and the DTI cutoff from 50% to 55%, and tightens the thin-file score bands. Fraud v2 turns a 1-hour velocity burst into a challenge instead of a block, and raises the model challenge cutoff from 0.35 to 0.40. Both challengers use the same saved models as the champions.</p>
+<p>Recommendation: <strong>NO-GO</strong>.</p>
+<p>Credit v2 is NO-GO: observed swap-in bad rate 0.0824 is more than 1.25 times the champion approval observed bad rate 0.0580.</p>
+<p>Expected loss moves -0.9% (52,191,011 to 51,733,947 rupees). LGD is the 0.45 planning assumption, not an observed loss.</p>
+<p>Fraud v2 is CONDITIONAL GO: fraud caught changes by -0.0169, inside 2 percentage points, and genuine blocks fall from 2,410 to 2,311. The condition is that a CHALLENGE on a velocity burst is an acceptable customer step.</p>
+<h2>Credit model, old split versus matured split</h2>
+<p>Maturity cutoff: application date on or before 2025-10-01 (as-of 2026-10-01 minus 12 months). Known-outcome rows 17,273. Matured rows 15,649.</p>
+<table>
+<tr><th></th><th>old split</th><th>matured split (saved model)</th></tr>
+<tr><td>train bad rate</td><td>0.0759</td><td>0.0761</td></tr>
+<tr><td>test bad rate</td><td>0.2000</td><td>0.0716</td></tr>
+<tr><td>AUC</td><td>0.7059</td><td>0.7064</td></tr>
+<tr><td>Gini</td><td>0.4119</td><td>0.4128</td></tr>
+<tr><td>KS</td><td>0.3169</td><td>0.3077</td></tr>
+<tr><td>train n</td><td>13,818</td><td>12,519</td></tr>
+<tr><td>test n</td><td>3,455</td><td>3,130</td></tr>
+</table>
+<p>The old test bad rate is higher because a loan can be labelled bad from month 3 and good only after month 12. The newest known rows are mostly early defaults. The saved model drops every application whose 12-month window is still open, then splits out-of-time inside what remains.</p>
+<h3>Calibration (predicted PD vs actual bad rate)</h3>
+<table>
+<tr><th>decile</th><th>old predicted</th><th>old actual</th><th>matured predicted</th><th>matured actual</th></tr>
+<tr><td>1</td><td>0.0194</td><td>0.0751</td><td>0.0190</td><td>0.0064</td></tr>
+<tr><td>2</td><td>0.0299</td><td>0.0754</td><td>0.0292</td><td>0.0224</td></tr>
+<tr><td>3</td><td>0.0386</td><td>0.1040</td><td>0.0372</td><td>0.0575</td></tr>
+<tr><td>4</td><td>0.0472</td><td>0.1333</td><td>0.0451</td><td>0.0288</td></tr>
+<tr><td>5</td><td>0.0576</td><td>0.1156</td><td>0.0538</td><td>0.0479</td></tr>
+<tr><td>6</td><td>0.0697</td><td>0.2174</td><td>0.0652</td><td>0.0703</td></tr>
+<tr><td>7</td><td>0.0850</td><td>0.2087</td><td>0.0790</td><td>0.0863</td></tr>
+<tr><td>8</td><td>0.1045</td><td>0.2601</td><td>0.0960</td><td>0.0799</td></tr>
+<tr><td>9</td><td>0.1363</td><td>0.3536</td><td>0.1252</td><td>0.1182</td></tr>
+<tr><td>10</td><td>0.2281</td><td>0.4566</td><td>0.2014</td><td>0.1981</td></tr>
+</table>
+<h2>Credit swap-set matrix</h2>
+<p>Rows are credit_v1. Columns are credit_v2.</p>
+<table>
+<tr><th>v1 \ v2</th><th>APPROVE</th><th>REFER</th><th>DECLINE</th></tr>
+<tr><td>APPROVE</td><td>19,398</td><td>747</td><td>0</td></tr>
+<tr><td>REFER</td><td>0</td><td>9,273</td><td>220</td></tr>
+<tr><td>DECLINE</td><td>321</td><td>350</td><td>19,057</td></tr>
+</table>
+<h2>Credit impact</h2>
+<p>Expected loss uses model PD x LGD 0.45 x approved limit. assumed share of the approved limit lost if the loan reaches 90+ DPD.</p>
+<table>
+<tr><th>version</th><th>approval rate</th><th>refer rate</th><th>decline rate</th><th>expected bad rate of approvals</th><th>observed bad rate of approvals</th><th>labelled approvals</th><th>expected loss (INR)</th><th>refers</th></tr>
+<tr><td>credit_v1</td><td>40.81%</td><td>19.23%</td><td>39.96%</td><td>0.0442</td><td>0.0580</td><td>10,727</td><td>52,191,011</td><td>9,493</td></tr>
+<tr><td>credit_v2</td><td>39.94%</td><td>21.01%</td><td>39.05%</td><td>0.0446</td><td>0.0587</td><td>10,485</td><td>51,733,947</td><td>10,370</td></tr>
+</table>
+<p>Referral volume change (v2 minus v1): +877.</p>
+<h2>Swap-ins and swap-outs</h2>
+<p>Expected bad rate is the average model PD. Observed bad rate uses only rows the historical book labelled good or bad.</p>
+<table>
+<tr><th>slice</th><th>count</th><th>average model PD (expected)</th><th>expected bad rate on labelled rows</th><th>expected bad count (sum of PD)</th><th>observed bad rate</th><th>labelled rows</th><th>observed bads</th></tr>
+<tr><td>swap-ins: v1 DECLINE or REFER, v2 APPROVE</td><td>321</td><td>0.0547</td><td>0.0550</td><td>9.3542</td><td>0.0824</td><td>170</td><td>14</td></tr>
+<tr><td>swap-outs: v1 APPROVE, v2 not APPROVE</td><td>747</td><td>0.0394</td><td>0.0392</td><td>16.1456</td><td>0.0510</td><td>412</td><td>21</td></tr>
+</table>
+<h2>Why each swap happened</h2>
+<p>Swap-ins are DECLINE or REFER to APPROVE. Swap-outs are APPROVE to anything else. The other columns are decision changes that do not cross the approve line.</p>
+<table>
+<tr><th>cause</th><th>swap-ins</th><th>swap-outs</th><th>DECLINE to APPROVE</th><th>DECLINE to REFER</th><th>REFER to APPROVE</th><th>REFER to DECLINE</th><th>APPROVE to REFER</th><th>APPROVE to DECLINE</th></tr>
+<tr><td>bureau_cutoff_600_to_580</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>dti_cutoff_50_to_55</td><td>321</td><td>0</td><td>321</td><td>350</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>bureau_cutoff_and_dti_cutoff</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>thin_file_score_band</td><td>0</td><td>747</td><td>0</td><td>0</td><td>0</td><td>220</td><td>747</td><td>0</td></tr>
+<tr><td>other_reason_change</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+</table>
+<p>Bureau scores 580-599: 732 applications, of which 716 are declined by v1 for the bureau rule. Decision changes in that group: 0. Their mean model PD is 0.7242 and the lowest is 0.1775, both above the 0.15 decline cutoff. 59 of them have no remaining hard-rule decline in v2 and are declined by the model cutoff alone. The bureau loosening therefore changes the reason on some declines and does not create approvals.</p>
+<h2>Fraud comparison</h2>
+<table>
+<tr><th>metric</th><th>fraud_v1</th><th>fraud_v2</th></tr>
+<tr><td>alert rate</td><td>0.0755</td><td>0.0575</td></tr>
+<tr><td>fraud caught</td><td>0.8736</td><td>0.8567</td></tr>
+<tr><td>fraud value caught (INR)</td><td>27,272,770</td><td>27,213,247</td></tr>
+<tr><td>fraud value blocked (INR)</td><td>26,920,770</td><td>26,920,770</td></tr>
+<tr><td>fraud value challenged (INR)</td><td>352,000</td><td>292,477</td></tr>
+<tr><td>false positives</td><td>35,438</td><td>26,542</td></tr>
+<tr><td>genuine transactions blocked</td><td>2,410</td><td>2,311</td></tr>
+<tr><td>genuine transactions challenged</td><td>33,028</td><td>24,231</td></tr>
+<tr><td>genuine customers blocked</td><td>2,147</td><td>2,107</td></tr>
+<tr><td>genuine customers challenged</td><td>16,500</td><td>14,482</td></tr>
+<tr><td>legitimate grocery-burst transactions</td><td>200</td><td>200</td></tr>
+<tr><td>grocery bursts blocked</td><td>82</td><td>3</td></tr>
+<tr><td>grocery bursts challenged</td><td>1</td><td>80</td></tr>
+<tr><td>grocery bursts allowed</td><td>117</td><td>117</td></tr>
+<tr><td>genuine grocery with 3+ txns in 1 hour</td><td>89</td><td>89</td></tr>
+<tr><td>those velocity rows blocked</td><td>89</td><td>2</td></tr>
+<tr><td>those velocity rows challenged</td><td>0</td><td>87</td></tr>
+</table>
+<h3>Why the fraud rate is higher in the model test window</h3>
+<p>Oldest 80% of transactions: fraud rate 0.0040 on 398,768 rows, ending 2026-09-13 06:13:07.</p>
+<p>Newest 20%: fraud rate 0.0089 on 99,693 rows, starting 2026-09-13 06:13:18.</p>
+<p>Before 2026-08-12: 0 frauds in 220,626 rows.</p>
+<p>From 2026-08-12 onward: 2,492 frauds in 277,835 rows (rate 0.0090).</p>
+<p>Legitimate tickets are spread across all 90 days. Fraud tickets are planted only from day 40, so a 30-day customer history can exist before the fraud. The oldest 80% of rows includes that quiet stretch, so its fraud rate is lower. The newest 20% sits inside the window where the fraud was planted.</p>
+<h2>Risks</h2>
+<p>Reject inference: the credit model only saw booked loans. A swap-in that the old book never funded has a model PD and no observed outcome.</p>
+<p>Outcome maturity: goods need 12 months. The saved model trains only on applications dated on or before the as-of date minus 12 months. Applications after that date are scored, not used to fit.</p>
+<p>Loss given default is assumed at 0.45. It is not estimated from these files.</p>
+<p>The labelled swap-ins are DTI moves. The old booking policy declined DTI above 60%, so a DTI between 50% and 55% could already have a repayment outcome. Bureau scores 580-599 do not become approvals.</p>
+<p>A grocery burst is identified as five genuine grocery tickets for one customer inside 20 minutes. That is the planted pattern. It is not a column on the mart.</p>
+<p>Fraud value blocked does not change. The drop in fraud value caught is the same size as the drop in fraud value challenged, which is the model challenge cutoff moving from 0.35 to 0.40. A velocity burst whose model score is already at or above 0.80 stays blocked.</p>
+<h2>Golden tests</h2>
+<p>Result: <strong>PASS</strong>. Exit code 0.</p>
+<pre>
+4 passed in 5.93s
+</pre>
+<h2>Sign-off</h2>
+<table>
+<tr><th>role</th><th>status</th></tr>
+<tr><td>Business owner</td><td>pending</td></tr>
+<tr><td>Risk</td><td>pending</td></tr>
+<tr><td>IT</td><td>pending</td></tr>
+</table>
+<p>Go / no-go recommendation: <strong>NO-GO</strong>.</p>
+<p>Credit challenger: NO-GO</p>
+<p>Fraud challenger: CONDITIONAL GO</p>
+<p>Reasons:</p>
+<p>Credit v2 is NO-GO: observed swap-in bad rate 0.0824 is more than 1.25 times the champion approval observed bad rate 0.0580.</p>
+<p>Expected loss moves -0.9% (52,191,011 to 51,733,947 rupees). LGD is the 0.45 planning assumption, not an observed loss.</p>
+<p>Fraud v2 is CONDITIONAL GO: fraud caught changes by -0.0169, inside 2 percentage points, and genuine blocks fall from 2,410 to 2,311. The condition is that a CHALLENGE on a velocity burst is an acceptable customer step.</p>
+</body></html>

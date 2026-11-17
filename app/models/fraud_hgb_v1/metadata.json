@@ -1,0 +1,94 @@
+{
+  "model_version": "fraud_hgb_v1",
+  "model_type": "hist_gradient_boosting",
+  "trained_at": "2026-10-14T16:09:21.216984+00:00",
+  "target": "is_fraud",
+  "class_weight": "balanced",
+  "features": [
+    "amount",
+    "txn_count_1h",
+    "txn_amount_1h",
+    "txn_count_24h",
+    "txn_amount_24h",
+    "avg_amount_30d",
+    "amount_vs_avg_30d",
+    "is_new_device",
+    "is_foreign_country",
+    "is_night",
+    "has_prior_30d"
+  ],
+  "n_train": 398768,
+  "n_test": 99693,
+  "train_start": "2026-07-03T00:02:37",
+  "train_end": "2026-09-13T06:13:07",
+  "test_start": "2026-09-13T06:13:18",
+  "test_end": "2026-09-30T23:58:18",
+  "fraud_rate_train": 0.00401988123420134,
+  "fraud_rate_test": 0.008917376345380318,
+  "metrics": {
+    "auc": 0.9629323230015461,
+    "pr_auc": 0.8047082904085537,
+    "precision_at_0_5": 0.5940752602081665,
+    "recall_at_0_5": 0.8346456692913385
+  },
+  "threshold_table": [
+    {
+      "threshold": 0.05,
+      "alert_rate": 0.513656926765169,
+      "precision": 0.017165286673957194,
+      "fraud_caught": 0.9887514060742407,
+      "false_positives": 50329,
+      "alerts": 51208
+    },
+    {
+      "threshold": 0.2,
+      "alert_rate": 0.31040293701664107,
+      "precision": 0.027565034739053158,
+      "fraud_caught": 0.9595050618672666,
+      "false_positives": 30092,
+      "alerts": 30945
+    },
+    {
+      "threshold": 0.3,
+      "alert_rate": 0.11710952624557391,
+      "precision": 0.06775160599571735,
+      "fraud_caught": 0.889763779527559,
+      "false_positives": 10884,
+      "alerts": 11675
+    },
+    {
+      "threshold": 0.35,
+      "alert_rate": 0.03560932061428586,
+      "precision": 0.21295774647887325,
+      "fraud_caught": 0.8503937007874016,
+      "false_positives": 2794,
+      "alerts": 3550
+    },
+    {
+      "threshold": 0.4,
+      "alert_rate": 0.016691242113287794,
+      "precision": 0.44771634615384615,
+      "fraud_caught": 0.8380202474690663,
+      "false_positives": 919,
+      "alerts": 1664
+    },
+    {
+      "threshold": 0.5,
+      "alert_rate": 0.01252846237950508,
+      "precision": 0.5940752602081665,
+      "fraud_caught": 0.8346456692913385,
+      "false_positives": 507,
+      "alerts": 1249
+    },
+    {
+      "threshold": 0.8,
+      "alert_rate": 0.011124151144012117,
+      "precision": 0.6555455365193869,
+      "fraud_caught": 0.8177727784026997,
+      "false_positives": 382,
+      "alerts": 1109
+    }
+  ],
+  "split": "oldest 80% of transactions train, newest 20% test",
+  "tradeoff": "A lower threshold catches more fraud and also challenges more genuine customers. A higher threshold does the reverse. Precision is the share of alerts that are real fraud."
+}

@@ -1,0 +1,61 @@
+# Challenger fraud policy. Two deliberate changes from fraud_v1:
+#   a 1-hour velocity burst is CHALLENGE, not BLOCK
+#   the model challenge cutoff moves from 0.35 to 0.40
+# The block cutoff stays at 0.80. A burst that the model also scores
+# at or above 0.80 is still blocked. A quiet grocery burst is not.
+
+version: fraud_v2
+effective_date: "2026-10-01"
+owner: fraud-policy
+description: >
+  Challenger policy. Velocity no longer blocks on its own, and the model
+  must be a little more sure before it challenges. Foreign new-device
+  stays a block.
+kind: fraud
+model_version: fraud_hgb_v1
+
+data_checks:
+  - field: amount
+    decision: CHALLENGE
+    reason: MISSING_AMOUNT
+  - field: txn_ts
+    decision: CHALLENGE
+    reason: MISSING_TXN_TS
+
+rules:
+  - reason: VELOCITY_1H
+    decision: CHALLENGE
+    when:
+      - field: txn_count_1h
+        op: gte
+        value: 3
+  - reason: FOREIGN_NEW_DEVICE
+    decision: BLOCK
+    when:
+      - field: is_foreign_country
+        op: eq
+        value: 1
+      - field: is_new_device
+        op: eq
+        value: 1
+  - reason: AMOUNT_VS_AVG_ABOVE_5
+    decision: CHALLENGE
+    when:
+      - field: amount_vs_avg_30d
+        op: gt
+        value: 5
+  - reason: NIGHT_HIGH_VALUE
+    decision: CHALLENGE
+    when:
+      - field: is_night
+        op: eq
+        value: 1
+      - field: amount
+        op: gte
+        value: 20000
+
+# 0.40 is the next row on the test threshold table after 0.35:
+# alert rate about 1.7% instead of 3.6%, precision about 0.45 instead of 0.21.
+score_bands:
+  challenge_min_pd: 0.40
+  block_min_pd: 0.80

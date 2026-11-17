@@ -1,0 +1,58 @@
+{
+  "model_version": "fraud_hgb_v1",
+  "n_transactions": 498461,
+  "fraud_rate_shift": {
+    "train_rows": 398768,
+    "test_rows": 99693,
+    "train_fraud_rate": 0.00401988123420134,
+    "test_fraud_rate": 0.008917376345380318,
+    "train_end": "2026-09-13 06:13:07",
+    "test_start": "2026-09-13 06:13:18",
+    "fraud_start_day": "2026-08-12",
+    "rows_before_fraud_window": 220626,
+    "frauds_before_fraud_window": 0,
+    "rows_in_fraud_window": 277835,
+    "frauds_in_fraud_window": 2492,
+    "fraud_rate_in_fraud_window": 0.008969352313423435
+  },
+  "versions": {
+    "fraud_v1": {
+      "alert_rate": 0.07546227287591206,
+      "fraud_caught_rate": 0.8735955056179775,
+      "fraud_value_caught": 27272769.64,
+      "fraud_value_blocked": 26920769.86,
+      "fraud_value_challenged": 351999.78,
+      "false_positives": 35438,
+      "genuine_transactions_blocked": 2410,
+      "genuine_transactions_challenged": 33028,
+      "genuine_customers_blocked": 2147,
+      "genuine_customers_challenged": 16500,
+      "grocery_burst_transactions": 200,
+      "grocery_burst_blocked": 82,
+      "grocery_burst_challenged": 1,
+      "grocery_burst_allowed": 117,
+      "genuine_grocery_velocity_rows": 89,
+      "genuine_grocery_velocity_blocked": 89,
+      "genuine_grocery_velocity_challenged": 0
+    },
+    "fraud_v2": {
+      "alert_rate": 0.05753108066629084,
+      "fraud_caught_rate": 0.8567415730337079,
+      "fraud_value_caught": 27213246.63,
+      "fraud_value_blocked": 26920769.86,
+      "fraud_value_challenged": 292476.77,
+      "false_positives": 26542,
+      "genuine_transactions_blocked": 2311,
+      "genuine_transactions_challenged": 24231,
+      "genuine_customers_blocked": 2107,
+      "genuine_customers_challenged": 14482,
+      "grocery_burst_transactions": 200,
+      "grocery_burst_blocked": 3,
+      "grocery_burst_challenged": 80,
+      "grocery_burst_allowed": 117,
+      "genuine_grocery_velocity_rows": 89,
+      "genuine_grocery_velocity_blocked": 2,
+      "genuine_grocery_velocity_challenged": 87
+    }
+  }
+}
